@@ -94,6 +94,12 @@ def get_args():
                         type=int, default=1)
     parser.add_argument('-l', '--location', type=parse_unicode,
                         help='Location, can be an address or coordinates.')
+    parser.add_argument('-alt', '--altitude',
+                        help='default altitude in meter',
+                        type=int, default=13)
+    parser.add_argument('-altr', '--altitude_range',
+                        help='additional range for --altitude in meter',
+                        type=int, default=1)
     parser.add_argument('-nj', '--no-jitter',
                         help=("Don't apply random -9m to +9m jitter to " +
                               "location."),
