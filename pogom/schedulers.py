@@ -45,6 +45,8 @@ import sys
 from copy import deepcopy
 import traceback
 from collections import Counter
+import random
+import requests
 from queue import Empty
 from operator import itemgetter
 from datetime import datetime, timedelta
@@ -54,10 +56,11 @@ from .utils import now, cur_sec, cellid, date_secs, equi_rect_distance
 
 log = logging.getLogger(__name__)
 
-
 # Simple base class that all other schedulers inherit from.
 # Most of these functions should be overridden in the actual scheduler classes.
 # Not all scheduler methods will need to use all of the functions.
+
+
 class BaseScheduler(object):
 
     def __init__(self, queues, status, args):
@@ -117,7 +120,7 @@ class BaseScheduler(object):
             'wait': 'Waiting for item from queue',
             'early': 'Early for {:6f},{:6f}; waiting {}s...'.format(step_location[0], step_location[1], remain),
             'late': 'Too late for location {:6f},{:6f}; skipping'.format(step_location[0], step_location[1]),
-            'search': 'Searching at {:6f},{:6f}'.format(step_location[0], step_location[1]),
+            'search': 'Searching at {:6f},{:6f},{:6f}'.format(step_location[0], step_location[1], step_location[2]),
             'invalid': 'Invalid response at {:6f},{:6f}, abandoning location'.format(step_location[0], step_location[1])
         }
         return step, step_location, appears, leaves, messages
@@ -141,6 +144,8 @@ class BaseScheduler(object):
 # Hex Search is the classic search method, with the pokepath modification,
 # searching in a hex grid around the center location.
 class HexSearch(BaseScheduler):
+    elevation = False
+    altitude = 0
 
     # Call base initialization, set step_distance.
     def __init__(self, queues, status, args):
@@ -154,7 +159,9 @@ class HexSearch(BaseScheduler):
             self.step_distance = 0.070
 
         self.step_limit = args.step_limit
-
+        self.gmaps = args.gmaps_key
+        self.altitude_range = args.altitude_range
+        self.altitude_default = args.altitude
         # This will hold the list of locations to scan so it can be reused,
         # instead of recalculating on each loop.
         self.locations = False
@@ -260,7 +267,24 @@ class HexSearch(BaseScheduler):
         # Add the required appear and disappear times.
         locationsZeroed = []
         for step, location in enumerate(results, 1):
-            locationsZeroed.append((step, (location[0], location[1], 0), 0, 0))
+            if HexSearch.elevation:
+                altitude = HexSearch.altitude
+            else:
+                try:
+                    r_session = requests.Session()
+                    response = r_session.get("https://maps.googleapis.com/maps/api/elevation/json?locations={},{}&key={}".format(location[0], location[1], self.gmaps))
+                    response = response.json()
+                    altitude = response["results"][0]["elevation"]
+                    HexSearch.elevation = True
+                    HexSearch.altitude = altitude
+                except:
+                    altitude = self.altitude_default
+            if self.altitude_range > 0:
+                altitude = altitude + random.randrange(-1 * self.altitude_range, self.altitude_range) + float(format(random.random(), '.13f'))
+            else:
+                altitude = altitude + float(format(random.random(), '.13f'))
+
+            locationsZeroed.append((step, (location[0], location[1], altitude), 0, 0))
         return locationsZeroed
 
     # Schedule the work to be done.
@@ -313,6 +337,8 @@ class HexSearchSpawnpoint(HexSearch):
 
 # Spawn Scan searches known spawnpoints at the specific time they spawn.
 class SpawnScan(BaseScheduler):
+    elevation = False
+    altitude = 0
 
     def __init__(self, queues, status, args):
         BaseScheduler.__init__(self, queues, status, args)
@@ -329,9 +355,12 @@ class SpawnScan(BaseScheduler):
 
         self.step_limit = args.step_limit
         self.locations = False
-
+        self.gmaps = args.gmaps_key
+        self.altitude_range = args.altitude_range
+        self.altitude_default = args.altitude
     # Generate locations is called when the locations list is cleared - the
     # first time it scans or after a location change.
+
     def _generate_locations(self):
         # Attempt to load spawns from file.
         if self.args.spawnpoint_scanning != 'nofile':
@@ -410,7 +439,23 @@ class SpawnScan(BaseScheduler):
         # locations = [((lat, lng, alt), ts_appears, ts_leaves),...]
         retset = []
         for step, location in enumerate(self.locations, 1):
-            retset.append((step, (location['lat'], location['lng'], 40.32), location[
+            if SpawnScan.elevation:
+                altitude = SpawnScan.altitude
+            else:
+                try:
+                    r_session = requests.Session()
+                    response = r_session.get("https://maps.googleapis.com/maps/api/elevation/json?locations={},{}&key={}".format(location['lat'], location['lng'], self.gmaps))
+                    response = response.json()
+                    altitude = response["results"][0]["elevation"]
+                    SpawnScan.elevation = True
+                    SpawnScan.altitude = altitude
+                except:
+                    altitude = self.altitude_default
+            if self.altitude_range > 0:
+                altitude = altitude + random.randrange(-1 * self.altitude_range, self.altitude_range) + float(format(random.random(), '.13f'))
+            else:
+                altitude = altitude + float(format(random.random(), '.13f'))
+            retset.append((step, (location['lat'], location['lng'], altitude), location[
                           'appears'], location['leaves']))
 
         return retset
