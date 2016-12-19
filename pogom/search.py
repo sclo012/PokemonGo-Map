@@ -223,11 +223,11 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
         sph = countsuccess * 3600 / elapsed
         fph = countfailed * 3600 / elapsed
         eph = countempty * 3600 / elapsed
-        sph = countskipped * 3600 / elapsed
+        skph = countskipped * 3600 / elapsed
         cph = countcaptchas * 3600 / elapsed
         ccost = cph * 0.003
         cmonth = ccost * 730
-        status_text.append('Total active: {}  |  Success: {} ({}/hr) | Fails: {} ({}/hr) | Empties: {} ({}/hr) | Skips {} ({}/hr) | Captchas: {} ({}/hr)|${:2}/hr|${:2}/mo'.format(countuser, countsuccess, sph, countfailed, fph, countempty, eph, countskipped, sph, countcaptchas, cph, ccost, cmonth))
+        status_text.append('Total active: {}  |  Success: {} ({}/hr) | Fails: {} ({}/hr) | Empties: {} ({}/hr) | Skips {} ({}/hr) | Captchas: {} ({}/hr)|${:2}/hr|${:2}/mo'.format(countuser, countsuccess, sph, countfailed, fph, countempty, eph, countskipped, skph, countcaptchas, cph, ccost, cmonth))
         status_text.append('Page {}/{}. Page number to switch pages. F to show on hold accounts. <ENTER> alone to switch between status and log view'.format(current_page[0], total_pages))
         # Clear the screen.
         os.system('cls' if os.name == 'nt' else 'clear')
