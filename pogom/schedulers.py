@@ -54,15 +54,14 @@ import sys
 from copy import deepcopy
 import traceback
 from collections import Counter
-import random
-import requests
 from queue import Empty
 from operator import itemgetter
 from datetime import datetime, timedelta
 from .transform import get_new_coords
 from .models import (hex_bounds, Pokemon, SpawnPoint,
                      ScannedLocation, ScanSpawnPoint)
-from .utils import now, cur_sec, cellid, date_secs, equi_rect_distance
+from .utils import (now, cur_sec, cellid, date_secs, equi_rect_distance,
+                    get_altitude)
 
 log = logging.getLogger(__name__)
 
@@ -286,19 +285,9 @@ class HexSearch(BaseScheduler):
             if HexSearch.elevation:
                 altitude = HexSearch.altitude
             else:
-                try:
-                    r_session = requests.Session()
-                    response = r_session.get("https://maps.googleapis.com/maps/api/elevation/json?locations={},{}&key={}".format(location[0], location[1], self.gmaps))
-                    response = response.json()
-                    altitude = response["results"][0]["elevation"]
-                    HexSearch.elevation = True
-                    HexSearch.altitude = altitude
-                except:
-                    altitude = self.altitude_default
-            if self.altitude_range > 0:
-                altitude = altitude + random.randrange(-1 * self.altitude_range, self.altitude_range) + float(format(random.random(), '.13f'))
-            else:
-                altitude = altitude + float(format(random.random(), '.13f'))
+                HexSearch.elevation = True
+                HexSearch.altitude = altitude
+                altitude = get_altitude(location['lat'], location['lng'], self.args.gmaps_key, self.args.altitude, self.args.altitude_range)
 
             locationsZeroed.append(
                 (step, (location[0], location[1], altitude), 0, 0))
@@ -466,23 +455,14 @@ class SpawnScan(BaseScheduler):
             if SpawnScan.elevation:
                 altitude = SpawnScan.altitude
             else:
-                try:
-                    r_session = requests.Session()
-                    response = r_session.get("https://maps.googleapis.com/maps/api/elevation/json?locations={},{}&key={}".format(location['lat'], location['lng'], self.gmaps))
-                    response = response.json()
-                    altitude = response["results"][0]["elevation"]
-                    SpawnScan.elevation = True
-                    SpawnScan.altitude = altitude
-                except:
-                    altitude = self.altitude_default
-            if self.altitude_range > 0:
-                altitude = altitude + random.randrange(-1 * self.altitude_range, self.altitude_range) + float(format(random.random(), '.13f'))
-            else:
-                altitude = altitude + float(format(random.random(), '.13f'))
-            retset.append((step,
-                           (location['lat'], location['lng'], altitude),
-                           location['appears'],
-                           location['leaves']))
+                SpawnScan.elevation = True
+                SpawnScan.altitude = altitude
+                altitude = get_altitude(location['lat'], location['lng'],
+                                        self.args.gmaps_key,
+                                        self.args.altitude,
+                                        self.args.altitude_range)
+            retset.append((step, (location['lat'], location['lng'], altitude),
+                           location['appears'], location['leaves']))
 
         return retset
 
@@ -541,9 +521,6 @@ class SpeedScan(HexSearch):
         self.status_message = []
         self.tth_found = 0
         self._stat_init()
-        self.gmaps = args.gmaps_key
-        self.altitude_range = args.altitude_range
-        self.altitude_default = args.altitude
 
     def _stat_init(self):
         self.spawns_found = 0
@@ -657,19 +634,9 @@ class SpeedScan(HexSearch):
             if SpeedScan.elevation:
                 altitude = SpeedScan.altitude
             else:
-                try:
-                    r_session = requests.Session()
-                    response = r_session.get("https://maps.googleapis.com/maps/api/elevation/json?locations={},{}&key={}".format(location[0], location[1], self.gmaps))
-                    response = response.json()
-                    altitude = response["results"][0]["elevation"]
-                    SpeedScan.elevation = True
-                    SpeedScan.altitude = altitude
-                except:
-                    altitude = self.altitude_default
-            if self.altitude_range > 0:
-                altitude = altitude + random.randrange(-1 * self.altitude_range, self.altitude_range) + float(format(random.random(), '.13f'))
-            else:
-                altitude = altitude + float(format(random.random(), '.13f'))
+                SpeedScan.elevation = True
+                SpeedScan.altitude = altitude
+                altitude = get_altitude(location[0], location[1], self.args.gmaps_key, self.args.altitude, self.args.altitude_range)
             generated_locations.append(
                 (step, (location[0], location[1], altitude), 0, 0))
         return generated_locations
