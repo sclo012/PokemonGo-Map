@@ -98,7 +98,7 @@ def get_args():
     parser.add_argument('-alt', '--altitude',
                         help='default altitude in meter',
                         type=int, default=13)
-    parser.add_argument('-altr', '--altitude_range',
+    parser.add_argument('-altr', '--altitude-range',
                         help='additional range for --altitude in meter',
                         type=int, default=1)
     parser.add_argument('-nj', '--no-jitter',
