@@ -49,8 +49,8 @@ from queue import Empty
 from operator import itemgetter
 from datetime import datetime, timedelta
 from .transform import get_new_coords
-from .models import hex_bounds, Pokemon, SpawnPoint, ScannedLocation, ScanSpawnPoint
-from .utils import now, cur_sec, cellid, date_secs, equi_rect_distance, get_altitude
+from .models import hex_bounds, Pokemon, SpawnPoint, ScannedLocation, ScanSpawnPoint, LocationAltitude
+from .utils import now, cur_sec, cellid, date_secs, equi_rect_distance
 
 log = logging.getLogger(__name__)
 
@@ -142,8 +142,6 @@ class BaseScheduler(object):
 # Hex Search is the classic search method, with the pokepath modification,
 # searching in a hex grid around the center location.
 class HexSearch(BaseScheduler):
-    elevation = False
-    altitude = 0
 
     # Call base initialization, set step_distance.
     def __init__(self, queues, status, args):
@@ -262,13 +260,7 @@ class HexSearch(BaseScheduler):
         # Add the required appear and disappear times.
         locationsZeroed = []
         for step, location in enumerate(results, 1):
-            if HexSearch.elevation:
-                altitude = HexSearch.altitude
-            else:
-                HexSearch.elevation = True
-                HexSearch.altitude = altitude
-                altitude = get_altitude(location['lat'], location['lng'], self.args.gmaps_key, self.args.altitude, self.args.altitude_range)
-
+            altitude = LocationAltitude.get_altitude_by_loc(location)
             locationsZeroed.append((step, (location[0], location[1], altitude), 0, 0))
         return locationsZeroed
 
@@ -322,8 +314,6 @@ class HexSearchSpawnpoint(HexSearch):
 
 # Spawn Scan searches known spawnpoints at the specific time they spawn.
 class SpawnScan(BaseScheduler):
-    elevation = False
-    altitude = 0
 
     def __init__(self, queues, status, args):
         BaseScheduler.__init__(self, queues, status, args)
@@ -421,12 +411,7 @@ class SpawnScan(BaseScheduler):
         # locations = [((lat, lng, alt), ts_appears, ts_leaves),...]
         retset = []
         for step, location in enumerate(self.locations, 1):
-            if SpawnScan.elevation:
-                altitude = SpawnScan.altitude
-            else:
-                SpawnScan.elevation = True
-                SpawnScan.altitude = altitude
-                altitude = get_altitude(location['lat'], location['lng'], self.args.gmaps_key, self.args.altitude, self.args.altitude_range)
+            altitude = LocationAltitude.get_altitude_by_loc([location['lat'], location['lng']])
             retset.append((step, (location['lat'], location['lng'], altitude), location[
                           'appears'], location['leaves']))
 
@@ -461,8 +446,6 @@ class SpawnScan(BaseScheduler):
 # After finishing the spawnpoint search or if timing isn't right for any of the remaining search bands,
 # workers will search the nearest scan location that has a new spawn.
 class SpeedScan(HexSearch):
-    elevation = False
-    altitude = 0
 
     # Call base initialization, set step_distance
     def __init__(self, queues, status, args):
@@ -589,12 +572,7 @@ class SpeedScan(HexSearch):
         # return [(step, (location[0], location[1], 0), 0, 0) for step, location in enumerate(results)]
         generated_locations = []
         for step, location in enumerate(results):
-            if SpeedScan.elevation:
-                altitude = SpeedScan.altitude
-            else:
-                SpeedScan.elevation = True
-                SpeedScan.altitude = altitude
-                altitude = get_altitude(location[0], location[1], self.args.gmaps_key, self.args.altitude, self.args.altitude_range)
+            altitude = LocationAltitude.get_altitude_by_loc(location)
             generated_locations.append((step, (location[0], location[1], altitude), 0, 0))
         return generated_locations
 
