@@ -647,17 +647,21 @@ def in_radius(loc1, loc2, distance):
     return equi_rect_distance(loc1, loc2) < distance
 
 
-def get_altitude(lat, lng, gmaps_key, default_altitude, altitude_range):
+def get_gmaps_altitude(lat, lng, gmaps_key):
     try:
         r_session = requests.Session()
-        response = r_session.get(
+        response = r_session.get((
             "https://maps.googleapis.com/maps/api/elevation/json?" +
-            "locations={},{}&key={}".format(lat, lng, gmaps_key))
+            "locations={},{}&key={}").format(lat, lng, gmaps_key))
         response = response.json()
         altitude = response["results"][0]["elevation"]
     except:
-        altitude = default_altitude
+        altitude = None
 
+    return altitude
+
+
+def randomize_altitude(altitude, altitude_range):
     if altitude_range > 0:
         altitude = (altitude +
                     random.randrange(-1 * altitude_range, altitude_range) +
