@@ -26,7 +26,7 @@ from cachetools import cached
 from . import config
 from .utils import get_pokemon_name, get_pokemon_rarity, get_pokemon_types, get_args, \
     cellid, in_radius, date_secs, clock_between, secs_between, get_move_name, get_move_damage, \
-    get_move_energy, get_move_type
+    get_move_energy, get_move_type, get_gmaps_altitude, randomize_altitude
 from .transform import transform_from_wgs_to_gcj, get_new_coords
 from .customLog import printPokemon
 log = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ args = get_args()
 flaskDb = FlaskDB()
 cache = TTLCache(maxsize=100, ttl=60 * 5)
 
-db_schema_version = 11
+db_schema_version = 12
 
 
 class MyRetryDB(RetryOperationalError, PooledMySQLDatabase):
@@ -636,6 +636,46 @@ class Gym(BaseModel):
             result['pokemon'].append(p)
 
         return result
+
+
+class LocationAltitude(BaseModel):
+    cellid = CharField(primary_key=True, max_length=50)
+    latitude = DoubleField()
+    longitude = DoubleField()
+    last_modified = DateTimeField(index=True, default=datetime.utcnow, null=True)
+    altitude = DoubleField()
+
+    class Meta:
+        indexes = ((('latitude', 'longitude'), False),)
+
+    # DB format of a new location altitude
+    @staticmethod
+    def new_loc(loc, altitude):
+        return {'cellid': cellid(loc),
+                'latitude': loc[0],
+                'longitude': loc[1],
+                'altitude': altitude}
+
+    # return altitude from the db or try to fetch from gmaps api, otherwise, default altitude
+    @classmethod
+    def get_altitude_by_loc(cls, loc):
+        query = (cls
+                 .select()
+                 .where((LocationAltitude.latitude == loc[0]) &
+                        (LocationAltitude.longitude == loc[1]))
+                 .dicts())
+
+        if len(list(query)):
+            altitude = query[0]['altitude']
+        else:
+            altitude = get_gmaps_altitude(loc[0], loc[1], args.gmaps_key)
+            if altitude is not None:
+                InsertQuery(cls, rows=[cls.new_loc(loc, altitude)]).upsert().execute()
+
+        if altitude is None:
+            altitude = args.altitude
+
+        return randomize_altitude(altitude, args.altitude_range)
 
 
 class ScannedLocation(BaseModel):
@@ -1973,14 +2013,14 @@ def create_tables(db):
     db.connect()
     verify_database_schema(db)
     db.create_tables([Pokemon, Pokestop, Gym, ScannedLocation, GymDetails, GymMember, GymPokemon,
-                      Trainer, MainWorker, WorkerStatus, SpawnPoint, ScanSpawnPoint, SpawnpointDetectionData], safe=True)
+                      Trainer, MainWorker, WorkerStatus, SpawnPoint, ScanSpawnPoint, SpawnpointDetectionData, LocationAltitude], safe=True)
     db.close()
 
 
 def drop_tables(db):
     db.connect()
     db.drop_tables([Pokemon, Pokestop, Gym, ScannedLocation, Versions, GymDetails, GymMember, GymPokemon,
-                    Trainer, MainWorker, WorkerStatus, SpawnPoint, ScanSpawnPoint, SpawnpointDetectionData, Versions], safe=True)
+                    Trainer, MainWorker, WorkerStatus, SpawnPoint, ScanSpawnPoint, SpawnpointDetectionData, LocationAltitude, Versions], safe=True)
     db.close()
 
 
