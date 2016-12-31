@@ -1658,7 +1658,10 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue, a
                 wh_poke.update({
                     'disappear_time': calendar.timegm(disappear_time.timetuple()),
                     'last_modified_time': p['last_modified_timestamp_ms'],
-                    'time_until_hidden_ms': p['time_till_hidden_ms']
+                    'time_until_hidden_ms': p['time_till_hidden_ms'],
+					'kind': sp['kind'],
+					'links': sp['links'],
+					'spawnpoint_id': p['spawnpoint_id']
                 })
                 wh_update_queue.put(('pokemon', wh_poke))
 
