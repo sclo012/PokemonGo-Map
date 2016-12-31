@@ -1793,7 +1793,10 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                     'verified': SpawnPoint.tth_found(sp),
                     'seconds_until_despawn': seconds_until_despawn,
                     'spawn_start': start_end[0],
-                    'spawn_end': start_end[1]
+                    'spawn_end': start_end[1],
+					'kind': sp['kind'],
+					'links': sp['links'],
+					'spawnpoint_id': p['spawnpoint_id']
                 })
                 wh_update_queue.put(('pokemon', wh_poke))
 
