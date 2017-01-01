@@ -31,6 +31,7 @@ import requests
 from datetime import datetime
 from threading import Thread, Lock
 from queue import Queue, Empty
+from random import randint
 
 from pgoapi import PGoApi
 from pgoapi.utilities import f2i
@@ -532,7 +533,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
             else:
                 api = PGoApi()
                 if args.hash_key:
-                    api.activate_hash_server(args.hash_key)
+                    api.activate_hash_server(args.hash_key[randint(0, len(args.hash_key) - 1)])
                     log.info('Created API instance using hash server.')
 
             # New account - new proxy
