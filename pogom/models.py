@@ -1444,7 +1444,7 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue, a
     sp_id_list = []
     now_secs = date_secs(now_date)
 
-    # Consolidate the individual lists in each cell into one list of Pokémon and a list of forts.
+    # Consolidate the individual lists in each cell into one list of Pokemon and a list of forts.
     cells = map_dict['responses']['GET_MAP_OBJECTS']['map_cells']
     for cell in cells:
         nearby_pokemons += cell.get('nearby_pokemons', [])
