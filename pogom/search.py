@@ -532,8 +532,8 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
             else:
                 api = PGoApi()
 				if args.hash_key:
-+                    api.activate_hash_server(args.hash_key)
-+                    log.info('Created API instance using hash server.')
+                    api.activate_hash_server(args.hash_key)
+                    log.info('Created API instance using hash server.')
 
             # New account - new proxy
             if args.proxy:
