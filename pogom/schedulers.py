@@ -822,7 +822,7 @@ class SpeedScan(HexSearch):
                     item['done'] = None
                     log.info('Putting back step %d in queue', item['step'])
                 else:
-                    log.info('Step %d failed scan for more then %d times! Giving up...', item['step'], self.args.bad_scan_retry)
+                    log.info('Step %d failed scan for more than %d times! Giving up...', item['step'], self.args.bad_scan_retry)
             else:
                 # Scan returned data
                 self.scans_done += 1
