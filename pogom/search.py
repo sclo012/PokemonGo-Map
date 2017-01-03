@@ -54,6 +54,9 @@ TIMESTAMP = '\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\00
 
 loginDelayLock = Lock()
 
+# Hash key index for round robin
+last_hash = -1
+
 
 # Apply a location jitter.
 def jitterLocation(location=None, maxMeters=10):
@@ -533,7 +536,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
             else:
                 api = PGoApi()
                 if args.hash_key:
-                    api.activate_hash_server(args.hash_key[randint(0, len(args.hash_key) - 1)])
+                    api.activate_hash_server(args.hash_key[get_new_hash(args)])
                     log.info('Created API instance using hash server.')
 
             # New account - new proxy
@@ -882,6 +885,16 @@ def token_request(args, status, url):
     token = str(recaptcha_response.split('|')[1])
     return token
 
+def get_new_hash(args):
+
+    global last_hash
+
+    if last_hash >= len(args.hash_key) - 1:
+        last_hash = 0
+    else:
+        last_hash = last_hash + 1
+    lh = last_hash
+    return lh
 
 def calc_distance(pos1, pos2):
     R = 6378.1  # KM radius of the earth
