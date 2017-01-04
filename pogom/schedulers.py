@@ -857,7 +857,6 @@ class SpeedScan(HexSearch):
                         if (sp_id == item.get('sp', None) and item.get('done', None) is None and
                                 now_secs > item['start'] and now_secs < item['end']):
                             item['done'] = 'Scanned'
-            
 
 
 # The SchedulerFactory returns an instance of the correct type of scheduler.
