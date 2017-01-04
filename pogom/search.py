@@ -896,6 +896,7 @@ def search_worker_thread(args, account_queue, account_failures,
                     consecutive_fails += 1
                     status['message'] = messages['invalid']
                     log.error(status['message'])
+                    scheduler.task_done(status, {'bad_scan': True})
                     time.sleep(scheduler.delay(status['last_scan_date']))
                     continue
 
@@ -916,6 +917,7 @@ def search_worker_thread(args, account_queue, account_failures,
                             captcha_token = token_request(
                                 args, status, captcha_url)
                             if 'ERROR' in captcha_token:
+                                scheduler.task_done(status, {'bad_scan': True})
                                 log.warning(
                                     "Unable to resolve captcha, please " +
                                     "check your 2captcha API key and/or " +
@@ -953,6 +955,7 @@ def search_worker_thread(args, account_queue, account_failures,
                                         "Account {} failed verifyChallenge, " +
                                         "putting away account for " +
                                         "now.").format(account['username'])
+                                    scheduler.task_done(status, {'bad_scan': True})
                                     log.info(status['message'])
                                     account_failures.append({
                                         'account': account,
@@ -992,6 +995,7 @@ def search_worker_thread(args, account_queue, account_failures,
                     consecutive_fails += 1
                     # consecutive_noitems = 0 - I propose to leave noitems
                     # counter in case of error.
+                    scheduler.task_done(status, {'bad_scan': True})
                     status['message'] = ('Map parse failed at {:6f},{:6f}, ' +
                                          'abandoning location. {} may be ' +
                                          'banned.').format(step_location[0],

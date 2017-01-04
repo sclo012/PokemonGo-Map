@@ -1036,6 +1036,7 @@ class SpeedScan(HexSearch):
                                 now_secs > item['start'] and
                                 now_secs < item['end']):
                             item['done'] = 'Scanned'
+            
 
 
 # The SchedulerFactory returns an instance of the correct type of scheduler.
