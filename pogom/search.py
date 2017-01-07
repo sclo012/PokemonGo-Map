@@ -155,7 +155,7 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
             eph = emptycount * 3600 / elapsed
             skph = skip_total * 3600 / elapsed
             cph = captchascount * 3600 / elapsed
-            ccost = cph * 0.003
+            ccost = cph * 0.00299
             cmonth = ccost * 730
 
             # Print the queue length.
