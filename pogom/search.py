@@ -174,23 +174,23 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
             status_text.append(status.format('Worker ID', 'Start', 'User', 'Proxy', 'Success', 'Failed', 'Empty', 'Skipped', 'Captchas', 'Message'))
 
             # set our hour variables.
-            countuser = 0
-            countsuccess = 0
-            countfailed = 0
-            countempty = 0
-            countskipped = 0
-            countcaptchas = 0
+            usercount = 0
+            successcount = 0
+            failcount = 0
+            emptycount = 0
+            skippedcount = 0
+            captchascount = 0
 
             for item in sorted(threadStatus):
                 if(threadStatus[item]['type'] == 'Worker'):
                     # Count our hour variables
-                    countuser += 1
-                    countsuccess += threadStatus[item]['success']
-                    countfailed += threadStatus[item]['fail']
-                    countempty += threadStatus[item]['noitems']
-                    countskipped += threadStatus[item]['skip']
-                    countcaptchas += threadStatus[item]['captchas']
-                    if countuser <= 1:
+                    usercount += 1
+                    successcount += threadStatus[item]['success']
+                    failcount += threadStatus[item]['fail']
+                    emptycount += threadStatus[item]['noitems']
+                    skippedcount += threadStatus[item]['skip']
+                    captchascount += threadStatus[item]['captchas']
+                    if usercount <= 1:
                         elapsed = now() - threadStatus[item]['starttime']
                     current_line += 1
 
@@ -220,14 +220,14 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
 
         # Print the status_text for the current screen.
         # determine hourly rates
-        sph = countsuccess * 3600 / elapsed
-        fph = countfailed * 3600 / elapsed
-        eph = countempty * 3600 / elapsed
-        skph = countskipped * 3600 / elapsed
-        cph = countcaptchas * 3600 / elapsed
+        sph = successcount * 3600 / elapsed
+        fph = failcount * 3600 / elapsed
+        eph = emptycount * 3600 / elapsed
+        skph = skippedcount * 3600 / elapsed
+        cph = captchascount * 3600 / elapsed
         ccost = cph * 0.003
         cmonth = ccost * 730
-        status_text.append('Total active: {}  |  Success: {} ({}/hr) | Fails: {} ({}/hr) | Empties: {} ({}/hr) | Skips {} ({}/hr) | Captchas: {} ({}/hr)|${:2}/hr|${:2}/mo'.format(countuser, countsuccess, sph, countfailed, fph, countempty, eph, countskipped, skph, countcaptchas, cph, ccost, cmonth))
+        status_text.append('Total active: {}  |  Success: {} ({}/hr) | Fails: {} ({}/hr) | Empties: {} ({}/hr) | Skips {} ({}/hr) | Captchas: {} ({}/hr)|${:2}/hr|${:2}/mo'.format(usercount, successcount, sph, failcount, fph, emptycount, eph, skippedcount, skph, captchascount, cph, ccost, cmonth))
         status_text.append('Page {}/{}. Page number to switch pages. F to show on hold accounts. <ENTER> alone to switch between status and log view'.format(current_page[0], total_pages))
         # Clear the screen.
         os.system('cls' if os.name == 'nt' else 'clear')
