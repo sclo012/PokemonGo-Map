@@ -128,9 +128,35 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
 
             # Calculate total skipped items.
             skip_total = 0
+            captchascount = 0
+            usercount = 0
+            successcount = 0
+            failcount = 0
+            emptycount = 0
             for item in threadStatus:
+                usercount += 1
                 if 'skip' in threadStatus[item]:
                     skip_total += threadStatus[item]['skip']
+                if 'captcha' in threadStatus[item]:
+                    captchascount += threadStatus[item]['captcha']
+                if 'noitems' in threadStatus[item]:
+                    emptycount += threadStatus[item]['noitems']
+                if 'fail' in threadStatus[item]:
+                    failcount += threadStatus[item]['fail']
+                if 'success' in threadStatus[item]:
+                    successcount += threadStatus[item]['success']
+                if usercount <= 1:
+                    elapsed = now() - threadStatus[item]['starttime']
+
+            if elapsed == 0:
+                elapsed = 1  # Just to prevent division by 0 errors, set elapsed to 1 millisecond
+            sph = successcount * 3600 / elapsed
+            fph = failcount * 3600 / elapsed
+            eph = emptycount * 3600 / elapsed
+            skph = skip_total * 3600 / elapsed
+            cph = captchascount * 3600 / elapsed
+            ccost = cph * 0.003
+            cmonth = ccost * 730
 
             # Print the queue length.
             search_items_queue_size = 0
@@ -172,26 +198,8 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
 
             # Print the worker status.
             status_text.append(status.format('Worker ID', 'Start', 'User', 'Proxy', 'Success', 'Failed', 'Empty', 'Skipped', 'Captchas', 'Message'))
-
-            # set our hour variables.
-            usercount = 0
-            successcount = 0
-            failcount = 0
-            emptycount = 0
-            skippedcount = 0
-            captchascount = 0
-
             for item in sorted(threadStatus):
                 if(threadStatus[item]['type'] == 'Worker'):
-                    # Count our hour variables
-                    usercount += 1
-                    successcount += threadStatus[item]['success']
-                    failcount += threadStatus[item]['fail']
-                    emptycount += threadStatus[item]['noitems']
-                    skippedcount += threadStatus[item]['skip']
-                    captchascount += threadStatus[item]['captchas']
-                    if usercount <= 1:
-                        elapsed = now() - threadStatus[item]['starttime']
                     current_line += 1
 
                     # Skip over items that don't belong on this page.
@@ -219,15 +227,7 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
                 status_text.append(status.format(account['account']['username'], time.strftime('%H:%M:%S', time.localtime(account['last_fail_time'])), account['reason']))
 
         # Print the status_text for the current screen.
-        # determine hourly rates
-        sph = successcount * 3600 / elapsed
-        fph = failcount * 3600 / elapsed
-        eph = emptycount * 3600 / elapsed
-        skph = skippedcount * 3600 / elapsed
-        cph = captchascount * 3600 / elapsed
-        ccost = cph * 0.003
-        cmonth = ccost * 730
-        status_text.append('Total active: {}  |  Success: {} ({}/hr) | Fails: {} ({}/hr) | Empties: {} ({}/hr) | Skips {} ({}/hr) | Captchas: {} ({}/hr)|${:2}/hr|${:2}/mo'.format(usercount, successcount, sph, failcount, fph, emptycount, eph, skippedcount, skph, captchascount, cph, ccost, cmonth))
+        status_text.append('Total active: {}  |  Success: {} ({}/hr) | Fails: {} ({}/hr) | Empties: {} ({}/hr) | Skips {} ({}/hr) | Captchas: {} ({}/hr)|${:2}/hr|${:2}/mo'.format(usercount, successcount, sph, failcount, fph, emptycount, eph, skip_total, skph, captchascount, cph, ccost, cmonth))
         status_text.append('Page {}/{}. Page number to switch pages. F to show on hold accounts. <ENTER> alone to switch between status and log view'.format(current_page[0], total_pages))
         # Clear the screen.
         os.system('cls' if os.name == 'nt' else 'clear')
