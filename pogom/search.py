@@ -511,14 +511,14 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
             status['message'] = 'Switching to account {}.'.format(account['username'])
             log.info(status['message'])
 
-            stagger_thread(args, account)
-
             # New lease of life right here.
             status['fail'] = 0
             status['success'] = 0
             status['noitems'] = 0
             status['skip'] = 0
             status['captcha'] = 0
+
+            stagger_thread(args, account)
 
             # Sleep when consecutive_fails reaches max_failures, overall fails for stat purposes.
             consecutive_fails = 0
