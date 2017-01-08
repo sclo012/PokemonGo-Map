@@ -744,7 +744,6 @@ class ScannedLocation(BaseModel):
     def _q_init(scan, start, end, kind, sp_id=None):
         return {'loc': scan['loc'], 'kind': kind, 'start': start, 'end': end, 'step': scan['step'], 'sp': sp_id}
 
-
     @classmethod
     def get_by_locs(cls, locs):
         lats = [loc[0] for loc in locs]
