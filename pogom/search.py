@@ -93,6 +93,7 @@ def switch_status_printer(display_type, current_page, mainlog, loglevel):
 
 # Thread to print out the status of each worker.
 def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_queue, account_queue, account_failures):
+    starttime = now()
     display_type = ["workers"]
     current_page = [1]
     # Grab current log / level.
@@ -145,9 +146,8 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
                     failcount += threadStatus[item]['fail']
                 if 'success' in threadStatus[item]:
                     successcount += threadStatus[item]['success']
-                if usercount <= 1:
-                    elapsed = now() - threadStatus[item]['starttime']
 
+            elapsed = now() - starttime
             if elapsed == 0:
                 elapsed = 1  # Just to prevent division by 0 errors, set elapsed to 1 millisecond
             sph = successcount * 3600 / elapsed
