@@ -137,8 +137,8 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
                 usercount += 1
                 if 'skip' in threadStatus[item]:
                     skip_total += threadStatus[item]['skip']
-                if 'captcha' in threadStatus[item]:
-                    captchascount += threadStatus[item]['captcha']
+                if 'captchas' in threadStatus[item]:
+                    captchascount += threadStatus[item]['captchas']
                 if 'noitems' in threadStatus[item]:
                     emptycount += threadStatus[item]['noitems']
                 if 'fail' in threadStatus[item]:
