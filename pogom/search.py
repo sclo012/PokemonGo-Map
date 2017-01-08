@@ -134,13 +134,14 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
             successcount = 0
             failcount = 0
             emptycount = 0
-            for worker_status in threadStatus.itervalues():
-                usercount += 1
-                skip_total += worker_status.get('skip', 0)
-                captchacount += worker_status.get('captcha', 0)
-                emptycount += worker_status.get('noitems', 0)
-                failcount += worker_status.get('fail', 0)
-                successcount += worker_status.get('success', 0)
+            for tstatus in threadStatus.itervalues():
+                if tstatus.get('type', '') == 'Worker':
+                    usercount += 1
+                    skip_total += tstatus.get('skip', 0)
+                    captchacount += tstatus.get('captcha', 0)
+                    emptycount += tstatus.get('noitems', 0)
+                    failcount += tstatus.get('fail', 0)
+                    successcount += tstatus.get('success', 0)
 
             elapsed = now() - starttime
             if elapsed == 0:
