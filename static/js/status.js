@@ -167,7 +167,7 @@ function processWorker (i, worker) {
   $('#fail_' + hash).html(worker['fail'])
   $('#no_items_' + hash).html(worker['no_items'])
   $('#skip_' + hash).html(worker['skip'])
-  $('#captchas_' + hash).html(worker['captchas'])
+  $('#captchas_' + hash).html(worker['captcha'])
   $('#lastmod_' + hash).html(lastModified)
   $('#message_' + hash).html(worker['message'])
 }
