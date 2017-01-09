@@ -979,11 +979,7 @@ class WorkerStatus(BaseModel):
     fail = IntegerField()
     no_items = IntegerField()
     skip = IntegerField()
-<<<<<<< HEAD
-    captchas = IntegerField(default=0)
-=======
     captcha = IntegerField(default=0)
->>>>>>> tmp
     last_modified = DateTimeField(index=True)
     message = CharField(max_length=255)
     last_scan_date = DateTimeField(index=True)
