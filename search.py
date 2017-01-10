@@ -680,7 +680,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                         if (key == key_scheduler.current_key()):
                             maximum = HashServer.status.get('maximum')
                             remaining = HashServer.status.get('remaining')
-                            status['hash_key'] = key_scheduler
+                            status['hash_key'] = key
                             status['maximum_rpm'] = maximum
                             status['rpm_left'] = remaining
                     status['message'] = 'Search at {:6f},{:6f} completed with {} finds.'.format(step_location[0], step_location[1], parsed['count'])
