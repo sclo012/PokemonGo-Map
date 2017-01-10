@@ -36,6 +36,7 @@ from pgoapi import PGoApi
 from pgoapi.utilities import f2i
 from pgoapi import utilities as util
 from pgoapi.exceptions import AuthException
+from pgoapi.hash_server import HashServer
 
 from .models import parse_map, GymDetails, parse_gyms, MainWorker, WorkerStatus
 from .fakePogoApi import FakePogoApi
@@ -171,7 +172,7 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
             status = '{:10} | {:5} | {:' + str(userlen) + '} | {:' + str(proxylen) + '} | {:7} | {:6} | {:5} | {:7} | {:10}'
 
             # Print the worker status.
-            status_text.append(status.format('Worker ID', 'Start', 'User', 'Proxy', 'Success', 'Failed', 'Empty', 'Skipped', 'Message'))
+            status_text.append(status.format('Worker ID', 'Start', 'User', 'Proxy', 'Success', 'Failed', 'Empty', 'Skipped', 'Hash Key', 'Maximum RPM', 'RPM left', 'Message'))
             for item in sorted(threadStatus):
                 if(threadStatus[item]['type'] == 'Worker'):
                     current_line += 1
@@ -182,7 +183,7 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
                     if current_line > end_line:
                         break
 
-                    status_text.append(status.format(item, time.strftime('%H:%M', time.localtime(threadStatus[item]['starttime'])), threadStatus[item]['username'], threadStatus[item]['proxy_display'], threadStatus[item]['success'], threadStatus[item]['fail'], threadStatus[item]['noitems'], threadStatus[item]['skip'], threadStatus[item]['message']))
+                    status_text.append(status.format(item, time.strftime('%H:%M', time.localtime(threadStatus[item]['starttime'])), threadStatus[item]['username'], threadStatus[item]['proxy_display'], threadStatus[item]['success'], threadStatus[item]['fail'], threadStatus[item]['noitems'], threadStatus[item]['skip'], threadStatus[item]['hash_key'], threadStatus[item]['maximum_rpm'], threadStatus[item]['rpm_left'], threadStatus[item]['message']))
 
         elif display_type[0] == 'failedaccounts':
             status_text.append('-----------------------------------------')
@@ -308,7 +309,7 @@ def search_overseer_thread(args, new_location_queue, pause_bit, heartb, db_updat
     # Create the key scheduler.
     if args.hash_key:
         log.info('Enabling hashing key scheduler...')
-        key_scheduler = schedulers.KeyScheduler(args.hash_key).scheduler()
+        key_scheduler = schedulers.KeyScheduler(args.hash_key)
 
     # Create specified number of search_worker_thread.
     log.info('Starting search worker threads...')
@@ -335,6 +336,9 @@ def search_overseer_thread(args, new_location_queue, pause_bit, heartb, db_updat
             'fail': 0,
             'noitems': 0,
             'skip': 0,
+            'hash_key': 0,
+            'maximum_rpm': 0,
+            'rpm_left': 0,
             'username': '',
             'proxy_display': proxy_display,
             'proxy_url': proxy_url
@@ -483,13 +487,16 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
             status['message'] = 'Switching to account {}.'.format(account['username'])
             log.info(status['message'])
 
-            stagger_thread(args, account)
-
             # New lease of life right here.
             status['fail'] = 0
             status['success'] = 0
             status['noitems'] = 0
             status['skip'] = 0
+            status['hash_key'] = 0
+            status['maximum_rpm'] = 0
+            status['rpm_left'] = 0
+
+            stagger_thread(args, account)
 
             # Sleep when consecutive_fails reaches max_failures, overall fails for stat purposes.
             consecutive_fails = 0
@@ -599,7 +606,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                 api.set_position(*step_location)
 
                 if args.hash_key:
-                    key = key_scheduler.next()
+                    key = key_scheduler.next_key()
                     log.debug('Using key {} for this scan.'.format(key))
                     api.activate_hash_server(key)
 
@@ -669,8 +676,18 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                         status['noitems'] += 1
                         consecutive_noitems += 1
                     consecutive_fails = 0
+                    if (key_scheduler):
+                        if (key == key_scheduler.current_key()):
+                            maximum = HashServer.status.get('maximum')
+                            remaining = HashServer.status.get('remaining')
+                            status['hash_key'] = key
+                            status['maximum_rpm'] = maximum
+                            status['rpm_left'] = remaining
                     status['message'] = 'Search at {:6f},{:6f} completed with {} finds.'.format(step_location[0], step_location[1], parsed['count'])
                     log.debug(status['message'])
+                    status['message'] = 'Hash Key {} with Maximum {} RPM has {} RPM left.'.format(key, maximum, remaining)
+                    log.debug(status['message'])
+                    log.info(status['message'])
                 except Exception as e:
                     parsed = False
                     status['fail'] += 1
