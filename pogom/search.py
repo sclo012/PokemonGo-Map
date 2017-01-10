@@ -107,6 +107,12 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
     t.daemon = True
     t.start()
 
+    skip_total = 0
+    captchacount = 0
+    successcount = 0
+    failcount = 0
+    emptycount = 0
+
     while True:
         time.sleep(1)
 
@@ -127,13 +133,8 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
             if usable_height < 1:
                 usable_height = 1
 
-            # Calculate total skipped items.
-            skip_total = 0
-            captchacount = 0
+            # Calculate totals.
             usercount = 0
-            successcount = 0
-            failcount = 0
-            emptycount = 0
             for tstatus in threadStatus.itervalues():
                 if tstatus.get('type', '') == 'Worker':
                     usercount += 1
