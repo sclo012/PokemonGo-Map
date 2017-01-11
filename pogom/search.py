@@ -672,21 +672,21 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                     if parsed['count'] > 0:
                         status['success'] += 1
                         consecutive_noitems = 0
+                        if (key_scheduler):
+                            if (key == key_scheduler.current_key()):
+                                maximum = HashServer.status.get('maximum')
+                                remaining = HashServer.status.get('remaining')
+                                status['hash_key'] = key_scheduler.current_key()
+                                status['maximum_rpm'] = maximum
+                                status['rpm_left'] = remaining
+                                log.info('Hash Key {} with Maximum {} RPM has {} RPM left.'.format(key, maximum, remaining))
                     else:
                         status['noitems'] += 1
                         consecutive_noitems += 1
                     consecutive_fails = 0
-                    if (key_scheduler):
-                        if (key == key_scheduler.current_key()):
-                            maximum = HashServer.status.get('maximum')
-                            remaining = HashServer.status.get('remaining')
-                            status['hash_key'] = key_scheduler.current_key()
-                            status['maximum_rpm'] = maximum
-                            status['rpm_left'] = remaining
                     status['message'] = 'Search at {:6f},{:6f} completed with {} finds.'.format(step_location[0], step_location[1], parsed['count'])
                     log.debug(status['message'])
                     log.info(status['message'])
-                    log.info('Hash Key {} with Maximum {} RPM has {} RPM left.'.format(key, maximum, remaining))
                 except Exception as e:
                     parsed = False
                     status['fail'] += 1
