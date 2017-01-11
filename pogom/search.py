@@ -27,6 +27,7 @@ import time
 import geopy
 import geopy.distance
 import requests
+import copy
 
 from datetime import datetime
 from threading import Thread
@@ -150,7 +151,7 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
                     emptycount += stat_delta(tstatus, last_status, 'noitems')
                     failcount += stat_delta(tstatus, last_status, 'fail')
                     successcount += stat_delta(tstatus, last_status, 'success')
-                    last_account_status[username] = tstatus
+                    last_account_status[username] = copy.deepcopy(tstatus)
 
             # Remove last status for accounts that workers
             # are not using anymore
