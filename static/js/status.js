@@ -133,7 +133,7 @@ function addWorker (mainWorkerHash, workerHash) {
       <div id="no_items_${workerHash}"  class="status_cell"/>
       <div id="skip_${workerHash}"     class="status_cell"/>
       <div id="hash_key_${workerHash}" class="status_cell"/>
-      <div id="maximum_${workerHash}" class="status_cell"/>
+      <div id="maximum_rpm_${workerHash}" class="status_cell"/>
       <div id="rpm_left_${workerHash}" class="status_cell"/>
       <div id="lastmod_${workerHash}"  class="status_cell"/>
       <div id="message_${workerHash}"  class="status_cell"/>
@@ -176,7 +176,7 @@ function processWorker (i, worker) {
   $('#no_items_' + hash).html(worker['no_items'])
   $('#skip_' + hash).html(worker['skip'])
   $('#hash_key_' + hash).html(worker['hash_key'])
-  $('#maximum_' + hash).html(worker['maximum'])
+  $('#maximum_rpm_' + hash).html(worker['maximum_rpm'])
   $('#rpm_left_' + hash).html(worker['rpm_left'])
   $('#lastmod_' + hash).html(lastModified)
   $('#message_' + hash).html(worker['message'])
