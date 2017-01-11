@@ -942,7 +942,7 @@ class WorkerStatus(BaseModel):
     last_modified = DateTimeField(index=True)
     message = CharField(max_length=255)
     hash_key = CharField(index=True, max_length=50)
-    maximum_rpm = CharField(index=True, max_length=10)
+    maximum_rpm = IntegerField(default=0)
     rpm_left = IntegerField(default=0)
     last_scan_date = DateTimeField(index=True)
     latitude = DoubleField(null=True)
