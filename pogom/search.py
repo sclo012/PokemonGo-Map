@@ -919,7 +919,7 @@ def stagger_thread(args, account):
 
 
 # The delta from last stat to current stat
-def stat_delta(last_status, current_status, stat_name):
+def stat_delta(current_status, last_status, stat_name):
     return current_status.get(stat_name, 0) - last_status.get(stat_name, 0)
 
 
