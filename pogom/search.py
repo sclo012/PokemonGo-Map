@@ -31,6 +31,7 @@ import requests
 from datetime import datetime
 from threading import Thread
 from queue import Queue, Empty
+from sets import Set
 
 from pgoapi import PGoApi
 from pgoapi.utilities import f2i
@@ -113,6 +114,8 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
     failcount = 0
     emptycount = 0
 
+    last_account_status = {}
+
     while True:
         time.sleep(1)
 
@@ -135,14 +138,25 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
 
             # Calculate totals.
             usercount = 0
+            current_accounts = Set()
             for tstatus in threadStatus.itervalues():
                 if tstatus.get('type', '') == 'Worker':
                     usercount += 1
-                    skip_total += tstatus.get('skip', 0)
-                    captchacount += tstatus.get('captcha', 0)
-                    emptycount += tstatus.get('noitems', 0)
-                    failcount += tstatus.get('fail', 0)
-                    successcount += tstatus.get('success', 0)
+                    username = tstatus.get('username', '')
+                    current_accounts.add(username)
+                    last_status = last_account_status.get(username, {})
+                    skip_total += stat_delta(tstatus, last_status, 'skip')
+                    captchacount += stat_delta(tstatus, last_status, 'captcha')
+                    emptycount += stat_delta(tstatus, last_status, 'noitems')
+                    failcount += stat_delta(tstatus, last_status, 'fail')
+                    successcount += stat_delta(tstatus, last_status, 'success')
+                    last_account_status[username] = tstatus
+
+            # Remove last status for accounts that workers
+            # are not using anymore
+            for username in last_account_status.keys():
+                if username not in current_accounts:
+                    del last_account_status[username]
 
             elapsed = now() - starttime
             if elapsed == 0:
@@ -902,6 +916,11 @@ def stagger_thread(args, account):
     delay = args.accounts.index(account) * args.login_delay + ((random.random() - .5) / 2)
     log.debug('Delaying thread startup for %.2f seconds...', delay)
     time.sleep(delay)
+
+
+# The delta from last stat to current stat
+def stat_delta(last_status, current_status, stat_name):
+    return current_status.get(stat_name, 0) - last_status.get(stat_name, 0)
 
 
 class TooManyLoginAttempts(Exception):
