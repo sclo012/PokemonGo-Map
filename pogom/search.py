@@ -199,15 +199,6 @@ def status_printer(threadStatus, search_items_queue_array, db_updates_queue, wh_
             status_text.append(status.format('Worker ID', 'Start', 'User', 'Proxy', 'Success', 'Failed', 'Empty', 'Skipped', 'Captchas', 'Message'))
             for item in sorted(threadStatus):
                 if(threadStatus[item]['type'] == 'Worker'):
-                    # Count our hour variables
-                    countuser += 1
-                    countsuccess += threadStatus[item]['success']
-                    countfailed += threadStatus[item]['fail']
-                    countempty += threadStatus[item]['noitems']
-                    countskipped += threadStatus[item]['skip']
-                    countcaptchas += threadStatus[item]['captchas']
-                    if countuser <= 1:
-                        elapsed = now() - threadStatus[item]['starttime']
                     current_line += 1
 
                     # Skip over items that don't belong on this page.
