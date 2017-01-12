@@ -71,7 +71,8 @@ class BaseModel(flaskDb.Model):
     @classmethod
     def get_all(cls):
         results = [m for m in cls.select().dicts()]
-        if get_args().china:
+        args = get_args()
+        if args.china:
             for result in results:
                 result['latitude'], result['longitude'] = \
                     transform_from_wgs_to_gcj(
@@ -361,7 +362,8 @@ class Pokemon(BaseModel):
                              (Pokemon.longitude <= e)
                              ))
         # Sqlite doesn't support distinct on columns.
-        if get_args().db_type == 'mysql':
+        args = get_args()
+        if args.db_type == 'mysql':
             query = query.distinct(Pokemon.spawnpoint_id)
         else:
             query = query.group_by(Pokemon.spawnpoint_id)

@@ -12,7 +12,8 @@ from datetime import datetime
 
 
 def printPokemon(id, lat, lng, itime):
-    if get_args().display_in_console:
+    args = get_args()
+    if args.display_in_console:
         pokemon_name = get_pokemon_name(id).lower()
         pokemon_rarity = get_pokemon_rarity(id).lower()
         pokemon_id = str(id)
