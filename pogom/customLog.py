@@ -11,8 +11,7 @@ from datetime import datetime
 #     ONLY = [i.lower().strip() for i in args.only.split(',')]
 
 
-def printPokemon(id, lat, lng, itime):
-    args = get_args()
+def printPokemon(args, id, lat, lng, itime):
     if args.display_in_console:
         pokemon_name = get_pokemon_name(id).lower()
         pokemon_rarity = get_pokemon_rarity(id).lower()

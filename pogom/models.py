@@ -41,8 +41,7 @@ class MyRetryDB(RetryOperationalError, PooledMySQLDatabase):
     pass
 
 
-def init_database(app):
-    args = get_args()
+def init_database(args, app):
     if args.db_type == 'mysql':
         log.info('Connecting to MySQL database on %s:%i', args.db_host, args.db_port)
         connections = args.db_max_connections
@@ -1341,7 +1340,8 @@ class SpawnpointDetectionData(BaseModel):
 
         sp['latest_seen'] = despawn_time
         sp['earliest_unseen'] = appear_time
-        log.info('1x60: appear %d, despawn %d, duration: %d min', appear_time, despawn_time, ((despawn_time - appear_time) % 3600) / 60)
+        log.debug('1x60: appear %d, despawn %d, duration: %d min', appear_time, despawn_time,
+                  ((despawn_time - appear_time) % 3600) / 60)
 
     # expand the seen times for 30 minute spawnpoints based on scans when spawn wasn't there
     # return true if spawnpoint dict changed
@@ -1557,7 +1557,7 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue, a
             seconds_until_despawn = (start_end[1] - now_secs) % 3600
             disappear_time = now_date + timedelta(seconds=seconds_until_despawn)
 
-            printPokemon(p['pokemon_data']['pokemon_id'], p['latitude'], p['longitude'], disappear_time)
+            printPokemon(args, p['pokemon_data']['pokemon_id'], p['latitude'], p['longitude'], disappear_time)
 
             # Scan for IVs and moves.
             encounter_result = None
