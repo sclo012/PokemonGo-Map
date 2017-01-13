@@ -2093,10 +2093,6 @@ def database_migrate(db, old_ver):
 
         db.drop_tables([ScanSpawnPoint])
 
-    if old_ver < 11:
-
-        db.drop_tables([ScanSpawnPoint])
-
     if old_ver < 12:
         migrate(
             migrator.add_column('workerstatus', 'hash_key', CharField(index=True, max_length=50), 'maximum_rpm', IntegerField(default=0), 'rpm_left', IntegerField(default=0))
