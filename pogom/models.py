@@ -1052,6 +1052,9 @@ class WorkerStatus(BaseModel):
     captcha = IntegerField(default=0)
     last_modified = DateTimeField(index=True)
     message = CharField(max_length=255)
+    hash_key = CharField(index=True, max_length=50, null=True)
+    maximum_rpm = IntegerField(default=0)
+    rpm_left = IntegerField(default=0)
     last_scan_date = DateTimeField(index=True)
     latitude = DoubleField(null=True)
     longitude = DoubleField(null=True)
@@ -1066,6 +1069,9 @@ class WorkerStatus(BaseModel):
                 'no_items': status['noitems'],
                 'skip': status['skip'],
                 'captcha': status['captcha'],
+                'hash_key': status['hash_key'],
+                'maximum_rpm': status['maximum_rpm'],
+                'rpm_left': status['rpm_left'],
                 'last_modified': datetime.utcnow(),
                 'message': status['message'],
                 'last_scan_date': status.get('last_scan_date', datetime.utcnow()),
@@ -2308,4 +2314,10 @@ def database_migrate(db, old_ver):
     if old_ver < 12:
         migrate(
             migrator.add_column('workerstatus', 'captcha', IntegerField(default=0))
+            migrator.add_column('workerstatus', 'hash_key',
+                                CharField(index=True, max_length=50, null=True)),
+            migrator.add_column('workerstatus', 'maximum_rpm',
+                                IntegerField(default=0)),
+            migrator.add_column('workerstatus', 'rpm_left',
+                                IntegerField(default=0))
         )
