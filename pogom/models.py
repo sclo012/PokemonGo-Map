@@ -1490,12 +1490,8 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue, a
     sp_id_list = []
     now_secs = date_secs(now_date)
 
-<<<<<<< HEAD
     # consolidate the individual lists in each cell into one list of Pokemon
     # and a list of forts
-=======
-    # Consolidate the individual lists in each cell into one list of Pokemon and a list of forts.
->>>>>>> badscanlog
     cells = map_dict['responses']['GET_MAP_OBJECTS']['map_cells']
     for cell in cells:
         nearby_pokemons += cell.get('nearby_pokemons', [])
@@ -1547,17 +1543,11 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue, a
     ScannedLocation.update_band(scan_loc)
     just_completed = not done_already and scan_loc['done']
 
-<<<<<<< HEAD
-    if len(wild_pokemon):
+    if len(wild_pokemon) and config['parse_pokemon']:
         encounter_ids = [b64encode(str(p['encounter_id']))
                          for p in wild_pokemon]
         # For all the wild Pokemon we found check if an active Pokemon is in
         # the database.
-=======
-    if len(wild_pokemon) and config['parse_pokemon']:
-        encounter_ids = [b64encode(str(p['encounter_id'])) for p in wild_pokemon]
-        # For all the wild Pokemon we found check if an active Pokemon is in the database.
->>>>>>> badscanlog
         query = (Pokemon
                  .select(Pokemon.encounter_id, Pokemon.spawnpoint_id)
                  .where((Pokemon.disappear_time > datetime.utcnow()) & (Pokemon.encounter_id << encounter_ids))
