@@ -200,7 +200,7 @@ def main():
     config['CHINA'] = args.china
 
     app = Pogom(__name__)
-    db = init_database(app)
+    db = init_database(args, app)
     if args.clear_db:
         log.info('Clearing database')
         if args.db_type == 'mysql':
