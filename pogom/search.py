@@ -38,7 +38,6 @@ from pgoapi import PGoApi
 from pgoapi.utilities import f2i
 from pgoapi import utilities as util
 from pgoapi.exceptions import AuthException
-from pgoapi.hash_server import HashServer
 
 from .models import parse_map, GymDetails, parse_gyms, MainWorker, WorkerStatus
 from .fakePogoApi import FakePogoApi
@@ -377,7 +376,7 @@ def search_overseer_thread(args, new_location_queue, pause_bit, heartb, db_updat
     # Create the key scheduler.
     if args.hash_key:
         log.info('Enabling hashing key scheduler...')
-        key_scheduler = schedulers.KeyScheduler(args.hash_key)
+        key_scheduler = schedulers.KeyScheduler(args.hash_key).scheduler()
 
     # Create specified number of search_worker_thread.
     log.info('Starting search worker threads...')
@@ -407,9 +406,6 @@ def search_overseer_thread(args, new_location_queue, pause_bit, heartb, db_updat
             'noitems': 0,
             'skip': 0,
             'captcha': 0,
-            'hash_key': 0,
-            'maximum_rpm': 0,
-            'rpm_left': 0,
             'username': '',
             'proxy_display': proxy_display,
             'proxy_url': proxy_url
@@ -582,9 +578,6 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
             status['noitems'] = 0
             status['skip'] = 0
             status['captcha'] = 0
-            status['hash_key'] = 0
-            status['maximum_rpm'] = 0
-            status['rpm_left'] = 0
 
             # Sleep when consecutive_fails reaches max_failures, overall fails
             # for stat purposes.
@@ -718,7 +711,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                 api.set_position(*step_location)
 
                 if args.hash_key:
-                    key = key_scheduler.next_key()
+                    key = key_scheduler.next()
                     log.debug('Using key {} for this scan.'.format(key))
                     api.activate_hash_server(key)
 
@@ -818,14 +811,6 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                     if parsed['count'] > 0:
                         status['success'] += 1
                         consecutive_noitems = 0
-                        if (key_scheduler):
-                            if (key == key_scheduler.current_key()):
-                                maximum = HashServer.status.get('maximum')
-                                remaining = HashServer.status.get('remaining')
-                                status['hash_key'] = key_scheduler.current_key()
-                                status['maximum_rpm'] = maximum
-                                status['rpm_left'] = remaining
-                                log.info('Hash Key {} with Maximum {} RPM has {} RPM left.'.format(key, maximum, remaining))
                     else:
                         status['noitems'] += 1
                         consecutive_noitems += 1
@@ -833,7 +818,6 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                     status['message'] = 'Search at {:6f},{:6f} completed with {} finds.'.format(
                         step_location[0], step_location[1], parsed['count'])
                     log.debug(status['message'])
-                    log.info(status['message'])
                 except Exception as e:
                     parsed = False
                     status['fail'] += 1
