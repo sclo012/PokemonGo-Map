@@ -49,15 +49,16 @@ from queue import Empty
 from operator import itemgetter
 from datetime import datetime, timedelta
 from .transform import get_new_coords
-from .models import hex_bounds, Pokemon, SpawnPoint, ScannedLocation, ScanSpawnPoint
+from .models import hex_bounds, Pokemon, SpawnPoint, ScannedLocation, ScanSpawnPoint, LocationAltitude
 from .utils import now, cur_sec, cellid, date_secs, equi_rect_distance
 
 log = logging.getLogger(__name__)
 
-
 # Simple base class that all other schedulers inherit from.
 # Most of these functions should be overridden in the actual scheduler classes.
 # Not all scheduler methods will need to use all of the functions.
+
+
 class BaseScheduler(object):
 
     def __init__(self, queues, status, args):
@@ -117,7 +118,7 @@ class BaseScheduler(object):
             'wait': 'Waiting for item from queue',
             'early': 'Early for {:6f},{:6f}; waiting {}s...'.format(step_location[0], step_location[1], remain),
             'late': 'Too late for location {:6f},{:6f}; skipping'.format(step_location[0], step_location[1]),
-            'search': 'Searching at {:6f},{:6f}'.format(step_location[0], step_location[1]),
+            'search': 'Searching at {:6f},{:6f},{:6f}'.format(step_location[0], step_location[1], step_location[2]),
             'invalid': 'Invalid response at {:6f},{:6f}, abandoning location'.format(step_location[0], step_location[1])
         }
         return step, step_location, appears, leaves, messages
@@ -154,7 +155,6 @@ class HexSearch(BaseScheduler):
             self.step_distance = 0.070
 
         self.step_limit = args.step_limit
-
         # This will hold the list of locations to scan so it can be reused,
         # instead of recalculating on each loop.
         self.locations = False
@@ -260,7 +260,8 @@ class HexSearch(BaseScheduler):
         # Add the required appear and disappear times.
         locationsZeroed = []
         for step, location in enumerate(results, 1):
-            locationsZeroed.append((step, (location[0], location[1], 0), 0, 0))
+            altitude = LocationAltitude.get_altitude_by_loc(location)
+            locationsZeroed.append((step, (location[0], location[1], altitude), 0, 0))
         return locationsZeroed
 
     # Schedule the work to be done.
@@ -329,9 +330,9 @@ class SpawnScan(BaseScheduler):
 
         self.step_limit = args.step_limit
         self.locations = False
-
     # Generate locations is called when the locations list is cleared - the
     # first time it scans or after a location change.
+
     def _generate_locations(self):
         # Attempt to load spawns from file.
         if self.args.spawnpoint_scanning != 'nofile':
@@ -410,7 +411,8 @@ class SpawnScan(BaseScheduler):
         # locations = [((lat, lng, alt), ts_appears, ts_leaves),...]
         retset = []
         for step, location in enumerate(self.locations, 1):
-            retset.append((step, (location['lat'], location['lng'], 40.32), location[
+            altitude = LocationAltitude.get_altitude_by_loc([location['lat'], location['lng']])
+            retset.append((step, (location['lat'], location['lng'], altitude), location[
                           'appears'], location['leaves']))
 
         return retset
@@ -567,7 +569,12 @@ class SpeedScan(HexSearch):
                 loc = get_new_coords(loc, xdist, WEST)
                 results.append((loc[0], loc[1], 0))
 
-        return [(step, (location[0], location[1], 0), 0, 0) for step, location in enumerate(results)]
+        # return [(step, (location[0], location[1], 0), 0, 0) for step, location in enumerate(results)]
+        generated_locations = []
+        for step, location in enumerate(results):
+            altitude = LocationAltitude.get_altitude_by_loc(location)
+            generated_locations.append((step, (location[0], location[1], altitude), 0, 0))
+        return generated_locations
 
     def getsize(self):
         return len(self.queues[0])
