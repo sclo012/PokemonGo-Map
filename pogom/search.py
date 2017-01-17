@@ -795,6 +795,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                     consecutive_fails += 1
                     status['message'] = messages['invalid']
                     log.error(status['message'])
+                    scheduler.task_done(status, {'bad_scan': True})
                     time.sleep(scheduler.delay(status['last_scan_date']))
                     continue
 
@@ -815,6 +816,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                             if 'ERROR' in captcha_token:
                                 log.warning(
                                     "Unable to resolve captcha, please check your 2captcha API key and/or wallet balance.")
+                                scheduler.task_done(status, {'bad_scan': True})
                                 account_failures.append({'account': account, 'last_fail_time': now(
                                 ), 'reason': 'captcha failed to verify'})
                                 break
@@ -839,6 +841,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                                     status['message'] = "Account {} failed verifyChallenge, putting away account for now.".format(account[
                                                                                                                                   'username'])
                                     log.info(status['message'])
+                                    scheduler.task_done(status, {'bad_scan': True})
                                     account_failures.append({'account': account, 'last_fail_time': now(
                                     ), 'reason': 'captcha failed to verify'})
                                     break
@@ -864,6 +867,7 @@ def search_worker_thread(args, account_queue, account_failures, search_items_que
                     # counter in case of error.
                     status['message'] = 'Map parse failed at {:6f},{:6f}, abandoning location. {} may be banned.'.format(
                         step_location[0], step_location[1], account['username'])
+                    scheduler.task_done(status, {'bad_scan': True})
                     log.exception('{}. Exception message: {}'.format(
                         status['message'], e))
 
