@@ -712,6 +712,7 @@ class LocationAltitude(BaseModel):
                         (LocationAltitude.longitude == loc[1]))
                  .dicts())
 
+        args = get_args()
         if len(list(query)):
             altitude = query[0]['altitude']
         else:
