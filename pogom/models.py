@@ -1650,12 +1650,12 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
         if not forts:
             log.warning('Bad scan. Parsing found absolutely nothing.')
             log.info('Common causes: captchas or IP bans.')
-            return {
-                'count': 0,
-                'gyms': gyms,
-                'spawn_points': spawn_points,
-                'bad_scan': True
-            }
+            #return {
+            #    'count': 0,
+            #    'gyms': gyms,
+            #    'spawn_points': spawn_points,
+            #    'bad_scan': True
+            #}
         else:
             # No wild or nearby Pokemon but there are forts.  It's probably
             # a speed violation.
