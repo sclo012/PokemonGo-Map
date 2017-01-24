@@ -64,11 +64,10 @@ from .utils import now, cur_sec, cellid, date_secs, equi_rect_distance
 
 log = logging.getLogger(__name__)
 
+
 # Simple base class that all other schedulers inherit from.
 # Most of these functions should be overridden in the actual scheduler classes.
 # Not all scheduler methods will need to use all of the functions.
-
-
 class BaseScheduler(object):
 
     def __init__(self, queues, status, args):
@@ -601,8 +600,6 @@ class SpeedScan(HexSearch):
                 loc = get_new_coords(loc, xdist, WEST)
                 results.append((loc[0], loc[1], 0))
 
-        # return [(step, (location[0], location[1], 0), 0, 0)
-        # for step, location in enumerate(results)]
         generated_locations = []
         for step, location in enumerate(results):
             altitude = LocationAltitude.get_altitude_by_loc(location)
