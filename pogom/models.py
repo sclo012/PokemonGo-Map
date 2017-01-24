@@ -725,7 +725,7 @@ class LocationAltitude(BaseModel):
         if altitude is None:
             altitude = args.altitude
 
-        return randomize_altitude(altitude, args.altitude_range)
+        return randomize_altitude(altitude, args.altitude_variance)
 
 
 class ScannedLocation(BaseModel):

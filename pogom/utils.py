@@ -98,8 +98,8 @@ def get_args():
     parser.add_argument('-alt', '--altitude',
                         help='default altitude in meter',
                         type=int, default=13)
-    parser.add_argument('-altr', '--altitude-range',
-                        help='additional range for --altitude in meter',
+    parser.add_argument('-altv', '--altitude-variance',
+                        help='variance for --altitude in meter',
                         type=int, default=1)
     parser.add_argument('-nj', '--no-jitter',
                         help=("Don't apply random -9m to +9m jitter to " +
@@ -661,10 +661,11 @@ def get_gmaps_altitude(lat, lng, gmaps_key):
     return altitude
 
 
-def randomize_altitude(altitude, altitude_range):
-    if altitude_range > 0:
+def randomize_altitude(altitude, altitude_variance):
+    if altitude_variance > 0:
         altitude = (altitude +
-                    random.randrange(-1 * altitude_range, altitude_range) +
+                    random.randrange(-1 * altitude_variance,
+                                     altitude_variance) +
                     float(format(random.random(), '.13f')))
     else:
         altitude = altitude + float(format(random.random(), '.13f'))
