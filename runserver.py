@@ -7,7 +7,6 @@ import shutil
 import logging
 import time
 import re
-import requests
 import ssl
 import json
 
@@ -21,7 +20,8 @@ from flask_cache_bust import init_cache_busting
 
 from pogom import config
 from pogom.app import Pogom
-from pogom.utils import get_args, now, get_gmaps_altitude
+from pogom.utils import get_args, now
+from pogom.altitude import get_gmaps_altitude
 
 from pogom.search import search_overseer_thread
 from pogom.models import (init_database, create_tables, drop_tables,

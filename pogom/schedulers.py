@@ -59,8 +59,9 @@ from operator import itemgetter
 from datetime import datetime, timedelta
 from .transform import get_new_coords
 from .models import (hex_bounds, Pokemon, SpawnPoint, ScannedLocation,
-                     ScanSpawnPoint, LocationAltitude)
+                     ScanSpawnPoint)
 from .utils import now, cur_sec, cellid, date_secs, equi_rect_distance
+from .altitude import get_altitude
 
 log = logging.getLogger(__name__)
 
@@ -275,7 +276,7 @@ class HexSearch(BaseScheduler):
         # Add the required appear and disappear times.
         locationsZeroed = []
         for step, location in enumerate(results, 1):
-            altitude = LocationAltitude.get_altitude_by_loc(location)
+            altitude = get_altitude(self.args, location)
             locationsZeroed.append(
                 (step, (location[0], location[1], altitude), 0, 0))
         return locationsZeroed
@@ -434,8 +435,8 @@ class SpawnScan(BaseScheduler):
         # locations = [((lat, lng, alt), ts_appears, ts_leaves),...]
         retset = []
         for step, location in enumerate(self.locations, 1):
-            altitude = LocationAltitude.get_altitude_by_loc([location['lat'],
-                                                             location['lng']])
+            altitude = get_altitude(self.args, [location['lat'],
+                                    location['lng']])
             retset.append((step, (location['lat'], location['lng'], altitude),
                            location['appears'], location['leaves']))
 
@@ -602,7 +603,7 @@ class SpeedScan(HexSearch):
 
         generated_locations = []
         for step, location in enumerate(results):
-            altitude = LocationAltitude.get_altitude_by_loc(location)
+            altitude = get_altitude(self.args, location)
             generated_locations.append(
                 (step, (location[0], location[1], altitude), 0, 0))
         return generated_locations

@@ -26,8 +26,7 @@ from cachetools import cached
 from . import config
 from .utils import get_pokemon_name, get_pokemon_rarity, get_pokemon_types, \
     get_args, cellid, in_radius, date_secs, clock_between, secs_between, \
-    get_move_name, get_move_damage, get_move_energy, get_move_type, \
-    get_gmaps_altitude, randomize_altitude
+    get_move_name, get_move_damage, get_move_energy, get_move_type
 from .transform import transform_from_wgs_to_gcj, get_new_coords
 from .customLog import printPokemon
 log = logging.getLogger(__name__)
@@ -686,8 +685,6 @@ class Gym(BaseModel):
 
 
 class LocationAltitude(BaseModel):
-    fallback_altitude = None
-
     cellid = CharField(primary_key=True, max_length=50)
     latitude = DoubleField()
     longitude = DoubleField()
@@ -727,30 +724,9 @@ class LocationAltitude(BaseModel):
 
         return altitude
 
-    # return altitude from the db or try to fetch from gmaps api,
-    # otherwise, default altitude
     @classmethod
-    def get_altitude_by_loc(cls, loc):
-        altitude = None
-
-        if args.no_altitude_db_cache:
-            if cls.fallback_altitude is None:
-                cls.fallback_altitude = get_gmaps_altitude(loc[0], loc[1],
-                                                           args.gmaps_key)
-            altitude = cls.fallback_altitude
-        else:
-            altitude = cls.get_nearby_altitude(loc)
-
-        if altitude is None:
-            altitude = get_gmaps_altitude(loc[0], loc[1], args.gmaps_key)
-            if altitude is not None:
-                InsertQuery(
-                    cls, rows=[cls.new_loc(loc, altitude)]).upsert().execute()
-
-        if altitude is None:
-            altitude = args.altitude
-
-        return randomize_altitude(altitude, args.altitude_variance)
+    def save_altitude(cls, loc, altitude):
+        InsertQuery(cls, rows=[cls.new_loc(loc, altitude)]).upsert().execute()
 
 
 class ScannedLocation(BaseModel):
