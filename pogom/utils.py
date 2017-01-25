@@ -10,6 +10,7 @@ import logging
 import shutil
 import pprint
 import time
+import requests
 import random
 from s2sphere import CellId, LatLng
 
@@ -94,6 +95,12 @@ def get_args():
                         type=int, default=1)
     parser.add_argument('-l', '--location', type=parse_unicode,
                         help='Location, can be an address or coordinates.')
+    parser.add_argument('-alt', '--altitude',
+                        help='default altitude in meter',
+                        type=int, default=13)
+    parser.add_argument('-altv', '--altitude-variance',
+                        help='variance for --altitude in meter',
+                        type=int, default=1)
     parser.add_argument('-nj', '--no-jitter',
                         help=("Don't apply random -9m to +9m jitter to " +
                               "location."),
@@ -638,6 +645,32 @@ def equi_rect_distance(loc1, loc2):
 # Return True if distance between two locs is less than distance in km.
 def in_radius(loc1, loc2, distance):
     return equi_rect_distance(loc1, loc2) < distance
+
+
+def get_gmaps_altitude(lat, lng, gmaps_key):
+    try:
+        r_session = requests.Session()
+        response = r_session.get((
+            "https://maps.googleapis.com/maps/api/elevation/json?" +
+            "locations={},{}&key={}").format(lat, lng, gmaps_key))
+        response = response.json()
+        altitude = response["results"][0]["elevation"]
+    except:
+        altitude = None
+
+    return altitude
+
+
+def randomize_altitude(altitude, altitude_variance):
+    if altitude_variance > 0:
+        altitude = (altitude +
+                    random.randrange(-1 * altitude_variance,
+                                     altitude_variance) +
+                    float(format(random.random(), '.13f')))
+    else:
+        altitude = altitude + float(format(random.random(), '.13f'))
+
+    return altitude
 
 
 def i8ln(word):
