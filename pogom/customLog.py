@@ -1,4 +1,5 @@
 from .utils import get_pokemon_rarity, get_pokemon_name
+from pogom.utils import get_args
 from datetime import datetime
 
 args = get_args()
