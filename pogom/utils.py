@@ -656,6 +656,7 @@ def get_gmaps_altitude(lat, lng, gmaps_key):
         response = response.json()
         altitude = response["results"][0]["elevation"]
     except:
+        log.error('Unable to retrieve altitude from Google APIs.')
         altitude = None
 
     return altitude
