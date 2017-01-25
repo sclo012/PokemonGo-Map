@@ -95,9 +95,11 @@ def get_args():
                         type=int, default=1)
     parser.add_argument('-l', '--location', type=parse_unicode,
                         help='Location, can be an address or coordinates.')
+    # Default based on the average elevation of cities around the world.
+    # Source: https://www.wikiwand.com/en/List_of_cities_by_elevation
     parser.add_argument('-alt', '--altitude',
                         help='Default altitude in meters.',
-                        type=int, default=13)
+                        type=int, default=507)
     parser.add_argument('-altv', '--altitude-variance',
                         help='Variance for --altitude in meters',
                         type=int, default=1)
