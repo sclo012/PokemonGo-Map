@@ -712,6 +712,7 @@ class LocationAltitude(BaseModel):
     # otherwise, default altitude
     @classmethod
     def get_altitude_by_loc(cls, loc):
+        args = get_args()
         query = (cls
                  .select()
                  .where((LocationAltitude.latitude == loc[0]) &
