@@ -704,19 +704,34 @@ class LocationAltitude(BaseModel):
                 'longitude': loc[1],
                 'altitude': altitude}
 
+    # find a nearby altitude from the db
+    # looking for one within 140m
+    @classmethod
+    def get_nearby_altitude(cls, loc):
+        n, e, s, w = hex_bounds(loc, radius=0.14)  # 140m
+
+        # Get all location altitudes in that box.
+        query = (cls
+                 .select()
+                 .where((cls.latitude <= n) &
+                        (cls.latitude >= s) &
+                        (cls.longitude >= w) &
+                        (cls.longitude <= e))
+                 .dicts())
+
+        altitude = None
+        if len(list(query)):
+            altitude = query[0]['altitude']
+
+        return altitude
+
     # return altitude from the db or try to fetch from gmaps api,
     # otherwise, default altitude
     @classmethod
     def get_altitude_by_loc(cls, loc):
-        query = (cls
-                 .select()
-                 .where((LocationAltitude.latitude == loc[0]) &
-                        (LocationAltitude.longitude == loc[1]))
-                 .dicts())
+        altitude = cls.get_nearby_altitude(loc)
 
-        if len(list(query)):
-            altitude = query[0]['altitude']
-        else:
+        if altitude is None:
             altitude = get_gmaps_altitude(loc[0], loc[1], args.gmaps_key)
             if altitude is not None:
                 InsertQuery(
