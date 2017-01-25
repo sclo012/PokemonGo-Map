@@ -686,6 +686,8 @@ class Gym(BaseModel):
 
 
 class LocationAltitude(BaseModel):
+    fallback_altitude = None
+
     cellid = CharField(primary_key=True, max_length=50)
     latitude = DoubleField()
     longitude = DoubleField()
@@ -729,7 +731,15 @@ class LocationAltitude(BaseModel):
     # otherwise, default altitude
     @classmethod
     def get_altitude_by_loc(cls, loc):
-        altitude = cls.get_nearby_altitude(loc)
+        altitude = None
+
+        if args.no_altitude_db_cache:
+            if cls.fallback_altitude is None:
+                cls.fallback_altitude = get_gmaps_altitude(loc[0], loc[1],
+                                                           args.gmaps_key)
+            altitude = cls.fallback_altitude
+        else:
+            altitude = cls.get_nearby_altitude(loc)
 
         if altitude is None:
             altitude = get_gmaps_altitude(loc[0], loc[1], args.gmaps_key)

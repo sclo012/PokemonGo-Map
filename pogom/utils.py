@@ -101,6 +101,11 @@ def get_args():
     parser.add_argument('-altv', '--altitude-variance',
                         help='Variance for --altitude in meters',
                         type=int, default=1)
+    parser.add_argument('-naltdb', '--no-altitude-db-cache',
+                        help=('Do not cache fetched altitudes in the' +
+                              'database. This imply fetching altitude ' +
+                              'only once for the running instance.'),
+                        action='store_true', default=False)
     parser.add_argument('-nj', '--no-jitter',
                         help=("Don't apply random -9m to +9m jitter to " +
                               "location."),
