@@ -102,7 +102,7 @@ def get_args():
     parser.add_argument('-altv', '--altitude-variance',
                         help='Variance for --altitude in meters',
                         type=int, default=1)
-    parser.add_argument('-naltdb', '--no-altitude-db-cache',
+    parser.add_argument('-nac', '--no-altitude-cache',
                         help=('Do not cache fetched altitudes in the' +
                               'database. This implies fetching the altitude ' +
                               'only once for the running instance.'),
