@@ -8,7 +8,7 @@ from .models import LocationAltitude
 
 log = logging.getLogger(__name__)
 
-# Altitude used when no_altitude_db_cache is enabled
+# Altitude used when no_altitude_cache is enabled
 fallback_altitude = None
 
 
@@ -69,7 +69,7 @@ def cached_get_altitude(args, loc):
 
 # Get altitude main method
 def get_altitude(args, loc):
-    if args.no_altitude_db_cache:
+    if args.no_altitude_cache:
         altitude = get_fallback_altitude(args, loc)
     else:
         altitude = cached_get_altitude(args, loc)
