@@ -19,12 +19,16 @@ def get_gmaps_altitude(lat, lng, gmaps_key):
             "https://maps.googleapis.com/maps/api/elevation/json?" +
             "locations={},{}&key={}").format(lat, lng, gmaps_key))
         response = response.json()
-        altitude = response["results"][0]["elevation"]
+        status = response['status']
+        results = response.get("results", [])
+        result = results[0] if results else {}
+        altitude = result.get("elevation", None)
     except:
         log.error('Unable to retrieve altitude from Google APIs.')
+        status = 'UNKNOWN_ERROR'
         altitude = None
 
-    return altitude
+    return (altitude, status)
 
 
 def randomize_altitude(altitude, altitude_variance):
@@ -44,8 +48,8 @@ def get_fallback_altitude(args, loc):
     global fallback_altitude
 
     if fallback_altitude is None:
-        fallback_altitude = get_gmaps_altitude(loc[0], loc[1],
-                                               args.gmaps_key)
+        (fallback_altitude, status) = get_gmaps_altitude(loc[0], loc[1],
+                                                         args.gmaps_key)
 
     return fallback_altitude
 
@@ -56,7 +60,7 @@ def cached_get_altitude(args, loc):
     altitude = LocationAltitude.get_nearby_altitude(loc)
 
     if altitude is None:
-        altitude = get_gmaps_altitude(loc[0], loc[1], args.gmaps_key)
+        (altitude, status) = get_gmaps_altitude(loc[0], loc[1], args.gmaps_key)
         if altitude is not None:
             LocationAltitude.save_altitude(loc, altitude)
 

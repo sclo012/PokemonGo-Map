@@ -191,12 +191,21 @@ def main():
         sys.exit()
 
     # Use the latitude and longitude to get the local altitude from Google.
-    altitude = get_gmaps_altitude(position[0], position[1], args.gmaps_key)
+    (altitude, status) = get_gmaps_altitude(position[0], position[1],
+                                            args.gmaps_key)
     if altitude is not None:
         log.debug('Local altitude is: %sm', altitude)
         position = (position[0], position[1], altitude)
     else:
-        log.error('Unable to retrieve altitude from Google APIs; setting to 0')
+        if status == 'REQUEST_DENIED':
+            log.error(
+                'Google API Elevation request was denied. You probably ' +
+                'forgot to enable elevation api in https://console.' +
+                'developers.google.com/apis/api/elevation_backend/')
+            sys.exit()
+        else:
+            log.error('Unable to retrieve altitude from Google APIs' +
+                      'setting to 0')
 
     log.info('Parsed location is: %.4f/%.4f/%.4f (lat/lng/alt)',
              position[0], position[1], position[2])
