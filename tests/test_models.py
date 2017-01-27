@@ -4,7 +4,8 @@ import logging
 
 from pogom import models
 
-logging.basicConfig(format='%(asctime)s [%(threadName)16s][%(module)14s][%(levelname)8s] %(message)s')
+logging.basicConfig(format='%(asctime)s [%(threadName)16s][%(module)14s]'
+                           '[%(levelname)8s] %(message)s')
 logging.getLogger().setLevel(logging.DEBUG)
 
 
