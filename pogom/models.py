@@ -1323,7 +1323,7 @@ class SpawnpointDetectionData(BaseModel):
     @classmethod
     def classify(cls, sp, scan_loc, now_secs, sighting=None):
 
-        # To reduce CPU usage, give an intial reading of 15 minute spawns if
+        # To reduce CPU usage, give an initial reading of 15 minute spawns if
         # not done with initial scan of location.
         if not scan_loc['done']:
             sp['kind'] = 'hhhs'
@@ -1351,9 +1351,12 @@ class SpawnpointDetectionData(BaseModel):
 
         query.sort(key=lambda x: x['scan_time'], reverse=True)
 
-        # Make a record of links, so we can reset earliest_unseen
-        # if it changes.
-        old_kind = str(sp['kind'])
+        earliest, latest = (SpawnpointDetectionData
+                            .get_earliest_and_latest_time(query))
+
+        # Round up to the nearest 15 minute interval for our guessed duration.
+        observed_duration = latest - earliest
+        duration = (int((observed_duration / 60.0) / 15) + 1) * 15
 
         # Make a sorted list of the seconds after the hour.
         seen_secs = sorted(map(lambda x: date_secs(x['scan_time']), query))
@@ -1363,22 +1366,16 @@ class SpawnpointDetectionData(BaseModel):
             seen_secs.append(seen_secs[0] + 3600)
 
         # Make a list of gaps between sightings.
-        gap_list = [seen_secs[i + 1] - seen_secs[i]
-                    for i in range(len(seen_secs) - 1)]
+        gap_list = sorted([seen_secs[i + 1] - seen_secs[i]
+                           for i in range(len(seen_secs) - 1)])
 
-        max_gap = max(gap_list)
-
-        # An hour minus the largest gap in minutes gives us the duration the
-        # spawn was there.  Round up to the nearest 15 minute interval for our
-        # current best guess duration.
-        duration = (int((60.0 - (max_gap / 60.0)) / 15) + 1) * 15
+        old_kind = str(sp['kind'])
 
         # If the second largest gap is larger than 15 minutes, then there are
         # two gaps greater than 15 minutes.  It must be a double spawn.
-        if len(gap_list) > 4 and sorted(gap_list)[-2] > 900:
+        if len(seen_secs) > 5 and gap_list[-2] > 900:
             sp['kind'] = 'hshs'
             sp['links'] = 'h?h?'
-
         else:
             # Convert the duration into a 'hhhs', 'hhss', 'hsss', 'ssss' string
             # accordingly.  's' is for seen, 'h' is for hidden.
@@ -1398,7 +1395,7 @@ class SpawnpointDetectionData(BaseModel):
                     sp['earliest_unseen'] != sp['latest_seen']):
 
                 # New latest_seen will be just before max_gap.
-                sp['latest_seen'] = seen_secs[gap_list.index(max_gap)]
+                sp['latest_seen'] = latest
 
                 # if we don't have a earliest_unseen yet or if the kind of
                 # spawn has changed, reset to latest_seen + 14 minutes.
@@ -1407,16 +1404,17 @@ class SpawnpointDetectionData(BaseModel):
 
             return
 
-        # Only ssss spawns from here below.
-
         sp['links'] = '+++-'
         if sp['earliest_unseen'] == sp['latest_seen']:
             return
 
-        cls.classify_1x60(query, sp)
+        sp['latest_seen'] = latest
+        sp['earliest_unseen'] = earliest
+        log.debug('1x60: appear %d, despawn %d, duration: %d min',
+                  earliest, latest, (observed_duration % 3600) / 60)
 
-    @classmethod
-    def classify_1x60(cls, query, sp):
+    @staticmethod
+    def get_earliest_and_latest_time(query):
         # find all sights and organize them by encounter id
         sights_by_encounter = {}
         for q in query:
@@ -1466,15 +1464,7 @@ class SpawnpointDetectionData(BaseModel):
             if try_latest > latest_time:
                 latest_time = try_latest
 
-        appear_time = earliest_time
-        despawn_time = latest_time
-
-        sp['latest_seen'] = despawn_time
-        sp['earliest_unseen'] = appear_time
-        log.debug('1x60: appear %d, despawn %d, duration: %d min',
-                  appear_time,
-                  despawn_time,
-                  ((despawn_time - appear_time) % 3600) / 60)
+        return earliest_time, latest_time
 
     # Expand the seen times for 30 minute spawnpoints based on scans when spawn
     # wasn't there.  Return true if spawnpoint dict changed.

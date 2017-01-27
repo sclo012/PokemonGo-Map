@@ -85,7 +85,8 @@ class ModelsTest(unittest.TestCase):
         self.assertEqual(sp['kind'], 'hhss')
         self.assertEqual(sp['links'], 'hh??')
         self.assertEqual(sp['latest_seen'], 29 * 60 + 59)
-        self.assertEqual(sp['earliest_unseen'], (sp['latest_seen'] + 14 * 60) % 3600)
+        self.assertEqual(sp['earliest_unseen'],
+                         (sp['latest_seen'] + 14 * 60) % 3600)
 
     def test_classify_hsss(self):
         """
@@ -103,12 +104,12 @@ class ModelsTest(unittest.TestCase):
         add_query_entry(query, '2', 19, 0, 0)
         add_query_entry(query, '2', 19, 14, 59)
         add_query_entry(query, '2', 19, 29, 59)
-        add_query_entry(query, '2', 18, 44, 59)
+        add_query_entry(query, '2', 19, 44, 59)
 
         add_query_entry(query, '3', 20, 0, 0)
         add_query_entry(query, '3', 20, 14, 59)
         add_query_entry(query, '3', 20, 29, 59)
-        add_query_entry(query, '1', 20, 44, 59)
+        add_query_entry(query, '3', 20, 44, 59)
 
         sp['earliest_unseen'] = 0
 
@@ -117,11 +118,13 @@ class ModelsTest(unittest.TestCase):
         self.assertEqual(sp['kind'], 'hsss')
         self.assertEqual(sp['links'], 'h???')
         self.assertEqual(sp['latest_seen'], 44 * 60 + 59)
-        self.assertEqual(sp['earliest_unseen'], (sp['latest_seen'] + 14 * 60) % 3600)
+        self.assertEqual(sp['earliest_unseen'],
+                         (sp['latest_seen'] + 14 * 60) % 3600)
 
     def test_classify_hshs(self):
         """
-        Simulate a spawn point that ranges from minute 00:00 to 14:59, then from 30:00 to 44:59
+        Simulate a spawn point that ranges from minute 00:00 to 14:59, then
+        from 30:00 to 44:59
         """
         sp = get_spawnpoint()
 
@@ -149,8 +152,9 @@ class ModelsTest(unittest.TestCase):
 
         self.assertEqual(sp['kind'], 'hshs')
         self.assertEqual(sp['links'], 'h?h?')
-        self.assertEqual(sp['latest_seen'], 14 * 60 + 59)
-        self.assertEqual(sp['earliest_unseen'], (sp['latest_seen'] + 14 * 60) % 3600)
+        self.assertEqual(sp['latest_seen'], 44 * 60 + 59)
+        self.assertEqual(sp['earliest_unseen'],
+                         (sp['latest_seen'] + 14 * 60) % 3600)
 
     def test_classify_1x60_1(self):
         """
@@ -179,7 +183,8 @@ class ModelsTest(unittest.TestCase):
 
     def test_classify_1x60_2(self):
         """
-        Test a more difficult one where different spawnpoints overlap different times
+        Test a more difficult one where different spawnpoints overlap different
+        times
         """
         sp = get_spawnpoint()
 
@@ -202,4 +207,28 @@ class ModelsTest(unittest.TestCase):
         self.assertEqual(sp['kind'], 'ssss')
         self.assertEqual(sp['links'], '+++-')
         self.assertEqual(sp['latest_seen'], 3600 - 61)
+        self.assertEqual(sp['earliest_unseen'], 0)
+
+    def test_classify_1x60_3(self):
+        """
+        Test a difficult one where different spawnpoints overlap different
+        times
+        """
+        sp = get_spawnpoint()
+
+        query = []
+
+        add_query_entry(query, '1', 18, 0, 0)
+        add_query_entry(query, '1', 18, 12, 59)
+        add_query_entry(query, '1', 18, 18, 59)
+        add_query_entry(query, '1', 18, 55, 59)
+
+        add_query_entry(query, '2', 20, 30, 0)
+        add_query_entry(query, '2', 20, 46, 59)
+
+        models.SpawnpointDetectionData.classify_sp(query, sp, None)
+
+        self.assertEqual(sp['kind'], 'ssss')
+        self.assertEqual(sp['links'], '+++-')
+        self.assertEqual(sp['latest_seen'], 55 * 60 + 59)
         self.assertEqual(sp['earliest_unseen'], 0)
