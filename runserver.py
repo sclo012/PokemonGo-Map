@@ -155,12 +155,11 @@ def main():
             sys.exit()
 
     # You need custom image files now.
-    if not args.no_server:
-        if not os.path.isfile(
-                os.path.join(os.path.dirname(__file__),
-                             'static/icons-sprite.png')):
-            log.critical('Missing sprite files.')
-            sys.exit()
+    if not os.path.isfile(
+            os.path.join(os.path.dirname(__file__),
+                         'static/icons-sprite.png')):
+        log.critical('Missing sprite files.')
+        sys.exit()
 
     # These are very noisy, let's shush them up a bit.
     logging.getLogger('peewee').setLevel(logging.INFO)
