@@ -31,7 +31,6 @@ from .transform import transform_from_wgs_to_gcj, get_new_coords
 from .customLog import printPokemon
 log = logging.getLogger(__name__)
 
-args = get_args()
 flaskDb = FlaskDB()
 cache = TTLCache(maxsize=100, ttl=60 * 5)
 
@@ -42,7 +41,7 @@ class MyRetryDB(RetryOperationalError, PooledMySQLDatabase):
     pass
 
 
-def init_database(app):
+def init_database(args, app):
     if args.db_type == 'mysql':
         log.info('Connecting to MySQL database on %s:%i...',
                  args.db_host, args.db_port)
@@ -72,6 +71,7 @@ class BaseModel(flaskDb.Model):
     @classmethod
     def get_all(cls):
         results = [m for m in cls.select().dicts()]
+        args = get_args()
         if args.china:
             for result in results:
                 result['latitude'], result['longitude'] = \
@@ -152,6 +152,7 @@ class Pokemon(BaseModel):
         gc.disable()
 
         pokemon = []
+        args = get_args()
         for p in list(query):
 
             p['pokemon_name'] = get_pokemon_name(p['pokemon_id'])
@@ -190,6 +191,7 @@ class Pokemon(BaseModel):
         # (potentially) large dict with append().
         gc.disable()
 
+        args = get_args()
         pokemon = []
         for p in query:
             p['pokemon_name'] = get_pokemon_name(p['pokemon_id'])
@@ -386,6 +388,7 @@ class Pokemon(BaseModel):
                              (Pokemon.longitude <= e)
                              ))
         # Sqlite doesn't support distinct on columns.
+        args = get_args()
         if args.db_type == 'mysql':
             query = query.distinct(Pokemon.spawnpoint_id)
         else:
@@ -501,6 +504,7 @@ class Pokestop(BaseModel):
         gc.disable()
 
         pokestops = []
+        args = get_args()
         for p in query:
             if args.china:
                 p['latitude'], p['longitude'] = \
@@ -1364,7 +1368,7 @@ class SpawnpointDetectionData(BaseModel):
     @classmethod
     def classify(cls, sp, scan_loc, now_secs, sighting=None):
 
-        # To reduce CPU usage, give an intial reading of 15 minute spawns if
+        # To reduce CPU usage, give an initial reading of 15 minute spawns if
         # not done with initial scan of location.
         if not scan_loc['done']:
             sp['kind'] = 'hhhs'
@@ -1383,12 +1387,21 @@ class SpawnpointDetectionData(BaseModel):
                         .where(cls.spawnpoint_id == sp['id'])
                         .dicts())
 
+        cls.classify_sp(query, sp, sighting)
+
+    @classmethod
+    def classify_sp(cls, query, sp, sighting):
         if sighting:
             query.append(sighting)
 
-        # Make a record of links, so we can reset earliest_unseen
-        # if it changes.
-        old_kind = str(sp['kind'])
+        query.sort(key=lambda x: x['scan_time'], reverse=True)
+
+        earliest, latest = (SpawnpointDetectionData
+                            .get_earliest_and_latest_time(query))
+
+        # Round up to the nearest 15 minute interval for our guessed duration.
+        observed_duration = latest - earliest
+        duration = (int((observed_duration / 60.0) / 15) + 1) * 15
 
         # Make a sorted list of the seconds after the hour.
         seen_secs = sorted(map(lambda x: date_secs(x['scan_time']), query))
@@ -1398,27 +1411,25 @@ class SpawnpointDetectionData(BaseModel):
             seen_secs.append(seen_secs[0] + 3600)
 
         # Make a list of gaps between sightings.
-        gap_list = [seen_secs[i + 1] - seen_secs[i]
-                    for i in range(len(seen_secs) - 1)]
+        gap_list = sorted([seen_secs[i + 1] - seen_secs[i]
+                           for i in range(len(seen_secs) - 1)])
 
-        max_gap = max(gap_list)
-
-        # An hour minus the largest gap in minutes gives us the duration the
-        # spawn was there.  Round up to the nearest 15 minute interval for our
-        # current best guess duration.
-        duration = (int((59 - max_gap / 60.0) / 15) + 1) * 15
+        old_kind = str(sp['kind'])
 
         # If the second largest gap is larger than 15 minutes, then there are
         # two gaps greater than 15 minutes.  It must be a double spawn.
-        if len(gap_list) > 4 and sorted(gap_list)[-2] > 900:
+        if len(seen_secs) > 5 and gap_list[-2] > 900:
             sp['kind'] = 'hshs'
             sp['links'] = 'h?h?'
-
         else:
             # Convert the duration into a 'hhhs', 'hhss', 'hsss', 'ssss' string
             # accordingly.  's' is for seen, 'h' is for hidden.
-            sp['kind'] = ''.join(
-                ['s' if i > (3 - duration / 15) else 'h' for i in range(0, 4)])
+            sp['kind'] = ""
+            for i in range(0, 4):
+                if i > (3 - duration / 15):
+                    sp['kind'] += 's'
+                else:
+                    sp['kind'] += 'h'
 
         # Assume no hidden times.
         sp['links'] = sp['kind'].replace('s', '?')
@@ -1429,7 +1440,7 @@ class SpawnpointDetectionData(BaseModel):
                     sp['earliest_unseen'] != sp['latest_seen']):
 
                 # New latest_seen will be just before max_gap.
-                sp['latest_seen'] = seen_secs[gap_list.index(max_gap)]
+                sp['latest_seen'] = latest
 
                 # if we don't have a earliest_unseen yet or if the kind of
                 # spawn has changed, reset to latest_seen + 14 minutes.
@@ -1438,84 +1449,67 @@ class SpawnpointDetectionData(BaseModel):
 
             return
 
-        # Only ssss spawns from here below.
-
         sp['links'] = '+++-'
         if sp['earliest_unseen'] == sp['latest_seen']:
             return
 
-        # Make a sight_list of dicts:
-        # {date: first seen time,
-        # delta: duration of sighting,
-        # same: whether encounter ID was same or different over that time}
-        #
-        # For 60 minute spawns ('ssss'), the largest gap doesn't give the
-        # earliest spawnpoint because a Pokemon is always there.  Use the union
-        # of all intervals where the same encounter ID was seen to find the
-        # latest_seen.  If a different encounter ID was seen, then the
-        # complement of that interval was the same ID, so union that
-        # complement as well.
+        sp['latest_seen'] = latest
+        sp['earliest_unseen'] = earliest
+        log.debug('1x60: appear %d, despawn %d, duration: %d min',
+                  earliest, latest, (observed_duration % 3600) / 60)
 
-        sight_list = [{'date': query[i]['scan_time'],
-                       'delta': query[i + 1]['scan_time'] -
-                       query[i]['scan_time'],
-                       'same': query[i + 1]['encounter_id'] ==
-                       query[i]['encounter_id']
-                       }
-                      for i in range(len(query) - 1)
-                      if query[i + 1]['scan_time'] - query[i]['scan_time'] <
-                      timedelta(hours=1)
-                      ]
+    @staticmethod
+    def get_earliest_and_latest_time(query):
+        # find all sights and organize them by encounter id
+        sights_by_encounter = {}
+        for q in query:
+            encounter_id = q['encounter_id']
+            if encounter_id not in sights_by_encounter:
+                sights_by_encounter[encounter_id] = []
 
-        start_end_list = []
-        for s in sight_list:
-            if s['same']:
-                # Get the seconds past the hour for start and end times.
-                start = date_secs(s['date'])
-                end = (start + int(s['delta'].total_seconds())) % 3600
+            sights_by_encounter[encounter_id].append(q['scan_time'])
 
-            else:
-                # Convert diff range to same range by taking the clock
-                # complement.
-                start = date_secs(s['date'] + s['delta']) % 3600
-                end = date_secs(s['date'])
+        for s in sights_by_encounter.values():
+            s.sort(reverse=False)
 
-            start_end_list.append([start, end])
+        # times holds pairs of earliest and latest times that a given pokemon
+        # was present
+        times = []
+        for encounter_id, scan_times in sights_by_encounter.iteritems():
+            if len(scan_times) < 2:
+                continue
 
-        # Take the union of all the ranges.
-        while True:
-            # union is list of unions of ranges with the same encounter id.
-            union = []
-            for start, end in start_end_list:
-                if not union:
-                    union.append([start, end])
-                    continue
-                # Cycle through all ranges in union, since it might overlap
-                # with any of them.
-                for u in union:
-                    if clock_between(u[0], start, u[1]):
-                        u[1] = end if not(clock_between(
-                            u[0], end, u[1])) else u[1]
-                    elif clock_between(u[0], end, u[1]):
-                        u[0] = start if not(clock_between(
-                            u[0], start, u[1])) else u[0]
-                    elif union.count([start, end]) == 0:
-                        union.append([start, end])
+            flip = False
+            earliest = date_secs(scan_times[0])
+            encounter_times = []
+            for scan_time in scan_times:
+                st = date_secs(scan_time)
 
-            # Are no more unions possible?
-            if union == start_end_list:
-                break
+                # scan_times array is ordered, so if `st` is smaller, then it
+                # means we passed the hour.
+                # for all the following times, add 3600 seconds so we maintain
+                # an order we can use to determine the earliest and latest time
+                if not flip and st < earliest:
+                    flip = True
+                if flip:
+                    st += 3600
+                encounter_times.append(st)
+            times.append(encounter_times)
 
-            start_end_list = union  # Make another pass looking for unions.
+        # now lets find out the earliest and the latest time that this
+        # spawnpoint has had visible pokemons
+        earliest_time = times[0][0]
+        latest_time = times[0][len(times[0]) - 1]
 
-        # If more than one disparate union, take the largest as our starting
-        # point.
-        union = reduce(lambda x, y: x if (x[1] - x[0]) % 3600 >
-                       (y[1] - y[0]) % 3600 else y, union, [0, 3600])
-        sp['latest_seen'] = union[1]
-        sp['earliest_unseen'] = union[0]
-        log.info('1x60: appear %d, despawn %d, duration: %d min.',
-                 union[0], union[1], ((union[1] - union[0]) % 3600) / 60)
+        for encounter_times in times:
+            try_earliest = encounter_times[0]
+            try_latest = encounter_times[len(encounter_times) - 1]
+            if try_earliest < earliest_time:
+                earliest_time = try_earliest
+            if try_latest > latest_time:
+                latest_time = try_latest
+
+        return earliest_time, latest_time
 
     # Expand the seen times for 30 minute spawnpoints based on scans when spawn
     # wasn't there.  Return true if spawnpoint dict changed.
@@ -1772,8 +1766,8 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
             disappear_time = now_date + \
                 timedelta(seconds=seconds_until_despawn)
 
-            printPokemon(p['pokemon_data']['pokemon_id'], p[
-                         'latitude'], p['longitude'], disappear_time)
+            printPokemon(args, p['pokemon_data']['pokemon_id'],
+                         p['latitude'], p['longitude'], disappear_time)
 
             # Scan for IVs and moves.
             encounter_result = None
@@ -2224,6 +2218,7 @@ def clean_db_loop(args):
 def bulk_upsert(cls, data, db):
     num_rows = len(data.values())
     i = 0
+    args = get_args()
 
     if args.db_type == 'mysql':
         step = 120
@@ -2326,6 +2321,7 @@ def database_migrate(db, old_ver):
 
     # Perform migrations here.
     migrator = None
+    args = get_args()
     if args.db_type == 'mysql':
         migrator = MySQLMigrator(db)
     else:
