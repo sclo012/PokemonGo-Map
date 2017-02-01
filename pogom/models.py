@@ -1408,8 +1408,8 @@ class SpawnpointDetectionData(BaseModel):
         if sp['earliest_unseen'] == sp['latest_seen']:
             return
 
-        sp['latest_seen'] = latest
-        sp['earliest_unseen'] = earliest
+        sp['latest_seen'] = latest % 3600
+        sp['earliest_unseen'] = earliest % 3600
         log.debug('1x60: appear %d, despawn %d, duration: %d min',
                   earliest, latest, (observed_duration % 3600) / 60)
 
@@ -1463,6 +1463,65 @@ class SpawnpointDetectionData(BaseModel):
                 earliest_time = try_earliest
             if try_latest > latest_time:
                 latest_time = try_latest
+
+        # final pass can take advantage of any single scans that can be used to
+        # expand the earliest/latest times
+        # it does so by comparing the last and first time of two encountered
+        # pokemons.
+        sights_by_encounter_items = sorted(sights_by_encounter.iteritems(),
+                                           key=lambda x: x[1][0])
+        for i in range(0, len(sights_by_encounter) - 1):
+            a = sights_by_encounter_items[i]
+            b = sights_by_encounter_items[i + 1]
+
+            # no use if both have more scanned times than 1
+            if len(a[1]) > 1 and len(b[1]) > 1:
+                continue
+
+            a_last_time = a[1][len(a[1]) - 1]
+            b_first_time = b[1][0]
+
+            diff_a_b = (b_first_time - a_last_time).total_seconds()
+
+            # if the difference between the two scanned times is greater than
+            # one hour, it's guaranteed to have a new encounter, and thus
+            # cannot be used.
+            if diff_a_b > 60 * 60:  # 1 hour
+                continue
+
+            a_secs = date_secs(a_last_time)
+            b_secs = date_secs(b_first_time)
+
+            latest_time_on_the_hour = latest_time % 3600
+            diff_latest_earliest = (max(latest_time_on_the_hour,
+                                        earliest_time)
+                                    - min(latest_time_on_the_hour,
+                                          earliest_time))
+
+            # if the difference between a and b is smaller than the difference
+            # between our currently determined latest and earliest time, then
+            # we can expand in some direction
+            if diff_a_b < diff_latest_earliest:
+
+                # have we found an earlier 'earliest_time'?
+                if b_secs < earliest_time:
+                    earliest_time = b_secs
+                elif b_secs > latest_time:
+                    earliest_time = b_secs
+
+                # have we found a later 'latest_time'?
+                # (we cannot have found both)
+                elif latest_time > 3600:
+                    if a_secs + 3600 > latest_time:
+                        latest_time = a_secs + 3600
+                else:
+                    if a_secs < earliest_time:
+                        a_secs += 3600
+                    latest_time = a_secs
+
+        # ensure latest time is actually later than earliest
+        if latest_time < earliest_time:
+            latest_time += 3600
 
         return earliest_time, latest_time
 
