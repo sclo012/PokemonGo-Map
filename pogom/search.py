@@ -958,6 +958,7 @@ def search_worker_thread(args, account_queue, account_failures,
                     consecutive_fails += 1
                     status['message'] = messages['invalid']
                     log.error(status['message'])
+                    scheduler.task_done(status, {'bad_scan': True})
                     time.sleep(scheduler.delay(status['last_scan_date']))
                     continue
 
@@ -1006,6 +1007,7 @@ def search_worker_thread(args, account_queue, account_failures,
                                          'banned.').format(step_location[0],
                                                            step_location[1],
                                                            account['username'])
+                    scheduler.task_done(status, {'bad_scan': True})
                     log.exception('{}. Exception message: {}'.format(
                         status['message'], repr(e)))
 
