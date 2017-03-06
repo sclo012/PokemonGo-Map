@@ -68,6 +68,7 @@ var gymPrestige = [2000, 4000, 8000, 12000, 16000, 20000, 30000, 40000, 50000]
 var audio = new Audio('static/sounds/ding.mp3')
 
 var GenderType = ['♂', '♀', '⚪']
+var Form = ['unset', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '?']
 
 /*
   text place holders:
@@ -393,7 +394,7 @@ function openMapDirections(lat, lng) { // eslint-disable-line no-unused-vars
     window.open(url, '_blank')
 }
 
-function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitude, encounterId, atk, def, sta, move1, move2, weight, height, gender) {
+function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitude, encounterId, atk, def, sta, move1, move2, weight, height, gender, form) {
     var disappearDate = new Date(disappearTime)
     var rarityDisplay = rarity ? '(' + rarity + ')' : ''
     var typesDisplay = ''
@@ -412,6 +413,13 @@ function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitud
             </div>
             <div>
                 Moves: ${pMove1} / ${pMove2}
+            </div>
+            `
+    }
+    if (id == 201 && form != null && form > 0) {
+        details += `
+            <div>
+                Form: ${Form[form]}
             </div>
             `
     }
