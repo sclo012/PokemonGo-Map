@@ -416,7 +416,7 @@ function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitud
             </div>
             `
     }
-    if (id == 201 && form != null && form > 0) {
+    if (id === 201 && form != null && form > 0) {
         details += `
             <div>
                 Form: ${Form[form]}

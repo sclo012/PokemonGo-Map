@@ -1896,9 +1896,14 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                     'move_2': pokemon_info['move_2'],
                     'height': pokemon_info['height_m'],
                     'weight': pokemon_info['weight_kg'],
-                    'gender': pokemon_info['pokemon_display']['gender'],
-                    'form': pokemon_info['pokemon_display']['form']
+                    'gender': pokemon_info['pokemon_display']['gender']
                 })
+
+                if (pokemon_info['pokemon_id'] == 201 and 'form'
+                        in pokemon_info['pokemon_display']):
+                    pokemon[p['encounter_id']].update({
+                        'form': pokemon_info['pokemon_display']['form']
+                    })
 
             if args.webhooks:
 
