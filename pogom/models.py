@@ -2605,6 +2605,7 @@ def database_migrate(db, old_ver):
             migrate(
                 migrator.add_index('pokestop', ('last_updated',), False)
             )
+        log.info('Schema upgrade complete.')
 
     if old_ver < 17:
         migrate(
