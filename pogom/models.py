@@ -1877,7 +1877,7 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                 'move_2': None,
                 'height': None,
                 'weight': None,
-                'gender': None,
+                'gender': None
             }
 
             if (encounter_result is not None and 'wild_pokemon'
