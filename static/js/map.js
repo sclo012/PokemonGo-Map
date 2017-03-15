@@ -429,7 +429,7 @@ function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitud
     if (id === 201 && form != null && form > 0) {
         contentstring += ` (${Form[form]}) `
     }
-    var contentstring += `<span> - </span>
+    contentstring += `<span> - </span>
             <small>
                 <a href='http://www.pokemon.com/us/pokedex/${id}' target='_blank' title='View in Pokedex'>#${id}</a>
             </small>
