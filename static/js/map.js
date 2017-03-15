@@ -416,13 +416,6 @@ function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitud
             </div>
             `
     }
-    if (id === 201 && form != null && form > 0) {
-        details += `
-            <div>
-                Form: ${Form[form]}
-            </div>
-            `
-    }
     if (gender != null) {
         details += `
             <div>
@@ -432,8 +425,11 @@ function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitud
     }
     var contentstring = `
         <div>
-            <b>${name}</b>
-            <span> - </span>
+            <b>${name}</b>`
+    if (id === 201 && form != null && form > 0) {
+        contentstring += ` (${Form[form]}) `
+    }
+    var contentstring += `<span> - </span>
             <small>
                 <a href='http://www.pokemon.com/us/pokedex/${id}' target='_blank' title='View in Pokedex'>#${id}</a>
             </small>
