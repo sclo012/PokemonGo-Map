@@ -106,6 +106,7 @@ class Pokemon(BaseModel):
     height = FloatField(null=True)
     gender = SmallIntegerField(null=True)
     form = SmallIntegerField(null=True)
+    shiny = BooleanField(null=True)
     last_modified = DateTimeField(
         null=True, index=True, default=datetime.utcnow)
 
@@ -1878,7 +1879,8 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                 'height': None,
                 'weight': None,
                 'gender': None,
-                'form': None
+                'form': None,
+                'shiny': False
             }
 
             if (encounter_result is not None and 'wild_pokemon'
@@ -1904,6 +1906,12 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                         in pokemon_info['pokemon_display']):
                     pokemon[p['encounter_id']].update({
                         'form': pokemon_info['pokemon_display']['form']
+                    })
+
+                # Check for shiny Pokemon
+                if 'shiny' in pokemon_info['pokemon_display']:
+                    pokemon[p['encounter_id']].update({
+                        'form': pokemon_info['pokemon_display']
                     })
 
             if args.webhooks:
@@ -2611,5 +2619,7 @@ def database_migrate(db, old_ver):
     if old_ver < 17:
         migrate(
             migrator.add_column('pokemon', 'form',
-                                SmallIntegerField(null=True))
+                                SmallIntegerField(null=True)),
+            migrator.add_column('pokemon', 'shiny',
+                                BooleanField(null=True))
         )

@@ -67,7 +67,8 @@ var gymTypes = ['Uncontested', 'Mystic', 'Valor', 'Instinct']
 var gymPrestige = [2000, 4000, 8000, 12000, 16000, 20000, 30000, 40000, 50000]
 var audio = new Audio('static/sounds/ding.mp3')
 
-var GenderType = ['♂', '♀', '⚪']
+var GenderType = ['♂', '♀', '⚬']
+var Shiny = '☆'
 var Form = ['unset', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '?']
 
 /*
@@ -394,7 +395,7 @@ function openMapDirections(lat, lng) { // eslint-disable-line no-unused-vars
     window.open(url, '_blank')
 }
 
-function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitude, encounterId, atk, def, sta, move1, move2, weight, height, gender, form) {
+function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitude, encounterId, atk, def, sta, move1, move2, weight, height, gender, form, shiny) {
     var disappearDate = new Date(disappearTime)
     var rarityDisplay = rarity ? '(' + rarity + ')' : ''
     var typesDisplay = ''
@@ -427,7 +428,10 @@ function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitud
         <div>
             <b>${name}</b>`
     if (id === 201 && form != null && form > 0) {
-        contentstring += ` (${Form[form]}) `
+        contentstring += ` (${Form[form]})`
+    }
+    if (shiny === true) {
+        contenstring += ` ${Shiny}`
     }
     contentstring += `<span> - </span>
             <small>
@@ -721,7 +725,7 @@ function customizePokemonMarker(marker, item, skipNotification) {
     }
 
     marker.infoWindow = new google.maps.InfoWindow({
-        content: pokemonLabel(item['pokemon_name'], item['pokemon_rarity'], item['pokemon_types'], item['disappear_time'], item['pokemon_id'], item['latitude'], item['longitude'], item['encounter_id'], item['individual_attack'], item['individual_defense'], item['individual_stamina'], item['move_1'], item['move_2'], item['weight'], item['height'], item['gender'], item['form']),
+        content: pokemonLabel(item['pokemon_name'], item['pokemon_rarity'], item['pokemon_types'], item['disappear_time'], item['pokemon_id'], item['latitude'], item['longitude'], item['encounter_id'], item['individual_attack'], item['individual_defense'], item['individual_stamina'], item['move_1'], item['move_2'], item['weight'], item['height'], item['gender'], item['form'], item['shiny']),
         disableAutoPan: true
     })
 
