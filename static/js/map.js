@@ -431,7 +431,7 @@ function pokemonLabel(name, rarity, types, disappearTime, id, latitude, longitud
         contentstring += ` (${Form[form]})`
     }
     if (shiny === true) {
-        contenstring += ` ${Shiny}`
+        contentstring += ` ${Shiny}`
     }
     contentstring += `<span> - </span>
             <small>
