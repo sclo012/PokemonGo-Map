@@ -1911,7 +1911,7 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                 # Check for shiny Pokemon
                 if 'shiny' in pokemon_info['pokemon_display']:
                     pokemon[p['encounter_id']].update({
-                        'shiny': pokemon_info['pokemon_display']
+                        'shiny': pokemon_info['pokemon_display']['shiny']
                     })
 
             if args.webhooks:
