@@ -1880,7 +1880,7 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                 'weight': None,
                 'gender': None,
                 'form': None,
-                'shiny': False
+                'shiny': None,
             }
 
             if (encounter_result is not None and 'wild_pokemon'
@@ -1911,7 +1911,7 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                 # Check for shiny Pokemon
                 if 'shiny' in pokemon_info['pokemon_display']:
                     pokemon[p['encounter_id']].update({
-                        'form': pokemon_info['pokemon_display']
+                        'shiny': pokemon_info['pokemon_display']
                     })
 
             if args.webhooks:
