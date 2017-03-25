@@ -1902,17 +1902,13 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                 })
 
                 # Check for Unown's alphabetic character
-                if (pokemon_info['pokemon_id'] == 201 and 'form'
-                        in pokemon_info['pokemon_display']):
-                    pokemon[p['encounter_id']].update({
-                        'form': pokemon_info['pokemon_display']['form']
-                    })
+                if pokemon_info['pokemon_id'] == 201:
+                    pokemon[p['encounter_id']]['form'] = pokemon_info[
+                        'pokemon_display'].get('form', None)
 
                 # Check for shiny Pokemon
-                if 'shiny' in pokemon_info['pokemon_display']:
-                    pokemon[p['encounter_id']].update({
-                        'shiny': pokemon_info['pokemon_display']['shiny']
-                    })
+                pokemon[p['encounter_id']]['shiny'] = pokemon_info[
+                    'pokemon_display'].get('shiny', None)
 
             if args.webhooks:
 
