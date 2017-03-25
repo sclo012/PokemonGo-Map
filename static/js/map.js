@@ -417,7 +417,7 @@ function pokemonLabel(item) {
             </div>
             `
     }
-    if (item['gender'] != null && item['weight'] != null && item['height'] != null) {
+    if (item['gender'] !== null && item['weight'] !== null && item['height'] !== null) {
         details += `
             <div>
                 Gender: ${genderType[item['gender'] - 1]} | Weight: ${item['weight'].toFixed(2)}kg | Height: ${item['height'].toFixed(2)}m
