@@ -406,7 +406,7 @@ function pokemonLabel(item) {
         typesDisplay += getTypeSpan(type)
     })
     var details = ''
-    if (item['individual_attack'] != null && item['individual_defense'] != 0 && item['individual_stamina'] != 0) {
+    if (item['individual_attack'] !== null && item['individual_defense'] !== 0 && item['individual_stamina'] !== 0) {
         var iv = getIv(item['individual_attack'], item['individual_defense'], item['individual_stamina'])
         details = `
             <div>
@@ -427,7 +427,7 @@ function pokemonLabel(item) {
     var contentstring = `
         <div>
             <b>${item['pokemon_name']}</b>`
-    if (item['pokemon_id'] === 201 && item['form'] != null && item['form'] > 0) {
+    if (item['pokemon_id'] === 201 && item['form'] !== null && item['form'] > 0) {
         contentstring += ` (${unownForm[item['form']]})`
     }
     if (item['shiny'] === true) {
