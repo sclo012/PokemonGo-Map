@@ -68,7 +68,6 @@ var gymPrestige = [2000, 4000, 8000, 12000, 16000, 20000, 30000, 40000, 50000]
 var audio = new Audio('static/sounds/ding.mp3')
 
 var genderType = ['♂', '♀', '⚬']
-var shinyMarker = '☆'
 var unownForm = ['unset', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '?']
 
 /*
@@ -429,9 +428,6 @@ function pokemonLabel(item) {
             <b>${item['pokemon_name']}</b>`
     if (item['pokemon_id'] === 201 && item['form'] !== null && item['form'] > 0) {
         contentstring += ` (${unownForm[item['form']]})`
-    }
-    if (item['shiny'] === true) {
-        contentstring += ` ${shinyMarker}`
     }
     contentstring += `<span> - </span>
             <small>
