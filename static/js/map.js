@@ -67,7 +67,7 @@ var gymTypes = ['Uncontested', 'Mystic', 'Valor', 'Instinct']
 var gymPrestige = [2000, 4000, 8000, 12000, 16000, 20000, 30000, 40000, 50000]
 var audio = new Audio('static/sounds/ding.mp3')
 
-var genderType = ['♂', '♀', '⚬']
+var genderType = ['♂', '♀', '⚲']
 var unownForm = ['unset', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '?']
 
 /*
@@ -395,43 +395,58 @@ function openMapDirections(lat, lng) { // eslint-disable-line no-unused-vars
 }
 
 function pokemonLabel(item) {
-    var disappearDate = new Date(item['disappear_time'])
+    var name = item['pokemon_name']
     var rarityDisplay = item['pokemon_rarity'] ? '(' + item['pokemon_rarity'] + ')' : ''
+    var types = item['pokemon_types']
     var typesDisplay = ''
+    var encounterId = item['encounter_id']
+    var id = item['pokemon_id']
+    var latitude = item['latitude']
+    var longitude = item['longitude']
+    var disappearTime = item['disappearTime']
+    var disappearDate = new Date(item['disappear_time'])
+    var atk = item['individual_attack']
+    var def = item['individual_defense']
+    var sta = item['individual_stamina']
     var pMove1 = (moves[item['move_1']] !== undefined) ? i8ln(moves[item['move_1']]['name']) : 'gen/unknown'
     var pMove2 = (moves[item['move_2']] !== undefined) ? i8ln(moves[item['move_2']]['name']) : 'gen/unknown'
+    var weight = item['weight']
+    var height = item['height']
+    var gender = item['gender']
+    var form = item['form']
 
-    $.each(item['pokemon_types'], function (index, type) {
+    $.each(types, function (index, type) {
         typesDisplay += getTypeSpan(type)
     })
+
     var details = ''
-    if (item['individual_attack'] !== null && item['individual_defense'] !== 0 && item['individual_stamina'] !== 0) {
-        var iv = getIv(item['individual_attack'], item['individual_defense'], item['individual_stamina'])
+    if (atk !== null && def !== null && sta !== null) {
+        var iv = getIv(atk, def, sta)
         details = `
             <div>
-                IV: ${iv.toFixed(1)}% (${item['individual_attack']}/${item['individual_defense']}/${item['individual_stamina']})
+                IV: ${iv.toFixed(1)}% (${atk}/${def}/${sta})
             </div>
             <div>
                 Moves: ${pMove1} / ${pMove2}
             </div>
             `
     }
-    if (item['gender'] !== null && item['weight'] !== null && item['height'] !== null) {
+    if (gender !== null && weight !== null && height !== null) {
         details += `
             <div>
-                Gender: ${genderType[item['gender'] - 1]} | Weight: ${item['weight'].toFixed(2)}kg | Height: ${item['height'].toFixed(2)}m
+                Gender: ${genderType[gender - 1]} | Weight: ${weight.toFixed(2)}kg | Height: ${height.toFixed(2)}m
             </div>
             `
     }
     var contentstring = `
         <div>
-            <b>${item['pokemon_name']}</b>`
-    if (item['pokemon_id'] === 201 && item['form'] !== null && item['form'] > 0) {
+            <b>${name}</b>`
+    if (id === 201 && form !== null && form > 0) {
         contentstring += ` (${unownForm[item['form']]})`
     }
     contentstring += `<span> - </span>
             <small>
-                <a href='http://www.pokemon.com/us/pokedex/${item['pokemon_id']}' target='_blank' title='View in Pokedex'>#${item['pokemon_id']}</a>
+                <a href='http://www.pokemon.com/us/pokedex/${id}' target='_blank' title='View in Pokedex'>#${id}</a>
             </small>
             <span> ${rarityDisplay}</span>
             <span> - </span>
@@ -439,17 +454,17 @@ function pokemonLabel(item) {
         </div>
         <div>
             Disappears at ${pad(disappearDate.getHours())}:${pad(disappearDate.getMinutes())}:${pad(disappearDate.getSeconds())}
-            <span class='label-countdown' disappears-at='${item['disappear_time']}'>(00m00s)</span>
+            <span class='label-countdown' disappears-at='${disappearTime}'>(00m00s)</span>
         </div>
         <div>
-            Location: ${item['latitude'].toFixed(6)}, ${item['longitude'].toFixed(7)}
+            Location: ${latitude.toFixed(6)}, ${longitude.toFixed(7)}
         </div>
             ${details}
         <div>
-            <a href='javascript:excludePokemon(${item['pokemon_id']})'>Exclude</a>&nbsp;&nbsp
-            <a href='javascript:notifyAboutPokemon(${item['pokemon_id']})'>Notify</a>&nbsp;&nbsp
-            <a href='javascript:removePokemonMarker("${item['encounter_id']}")'>Remove</a>&nbsp;&nbsp
-            <a href='javascript:void(0);' onclick='javascript:openMapDirections(${item['latitude']},${item['longitude']});' title='View in Maps'>Get directions</a>
+            <a href='javascript:excludePokemon(${id})'>Exclude</a>&nbsp;&nbsp
+            <a href='javascript:notifyAboutPokemon(${id})'>Notify</a>&nbsp;&nbsp
+            <a href='javascript:removePokemonMarker("${encounterId}")'>Remove</a>&nbsp;&nbsp
+            <a href='javascript:void(0);' onclick='javascript:openMapDirections(${latitude},${longitude});' title='View in Maps'>Get directions</a>
         </div>`
     return contentstring
 }
