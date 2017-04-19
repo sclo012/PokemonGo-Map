@@ -404,7 +404,7 @@ function pokemonLabel(item) {
     var latitude = item['latitude']
     var longitude = item['longitude']
     var disappearTime = item['disappearTime']
-    var disappearDate = new Date(item['disappear_time'])
+    var disappearDate = new Date(disappearTime)
     var atk = item['individual_attack']
     var def = item['individual_defense']
     var sta = item['individual_stamina']
