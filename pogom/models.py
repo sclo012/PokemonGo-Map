@@ -1982,19 +1982,19 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
                     in encounter_result['responses']['ENCOUNTER']):
                 pokemon_info = encounter_result['responses'][
                     'ENCOUNTER']['wild_pokemon']['pokemon_data']
-                pokemon[p['encounter_id']].update({
-                    'individual_attack': pokemon_info.get(
-                        'individual_attack', 0),
-                    'individual_defense': pokemon_info.get(
-                        'individual_defense', 0),
-                    'individual_stamina': pokemon_info.get(
-                        'individual_stamina', 0),
-                    'move_1': pokemon_info['move_1'],
-                    'move_2': pokemon_info['move_2'],
-                    'height': pokemon_info['height_m'],
-                    'weight': pokemon_info['weight_kg'],
-                    'gender': pokemon_info['pokemon_display']['gender']
-                })
+                #pokemon[p['encounter_id']].update({
+                #    'individual_attack': pokemon_info.get(
+                #        'individual_attack', 0),
+                #    'individual_defense': pokemon_info.get(
+                #        'individual_defense', 0),
+                #    'individual_stamina': pokemon_info.get(
+                #        'individual_stamina', 0),
+                #    'move_1': pokemon_info['move_1'],
+                #    'move_2': pokemon_info['move_2'],
+                #    'height': pokemon_info['height_m'],
+                #    'weight': pokemon_info['weight_kg'],
+                #    'gender': pokemon_info['pokemon_display']['gender']
+                #})
 
                 # Check for Unown's alphabetic character.
                 if pokemon_info['pokemon_id'] == 201:
