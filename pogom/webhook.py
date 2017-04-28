@@ -20,10 +20,10 @@ wh_warning_threshold = 100
 wh_threshold_lifetime = int(5 * (wh_warning_threshold / 100.0))
 wh_lock = threading.Lock()
 
+args = get_args()
+
 
 def send_to_webhook(session, message_type, message):
-    args = get_args()
-
     if not args.webhooks:
         # What are you even doing here...
         log.warning('Called send_to_webhook() without webhooks.')
@@ -188,7 +188,7 @@ def __get_key_fields(whtype):
         'pokemon': ['spawnpoint_id', 'pokemon_id', 'latitude', 'longitude',
                     'disappear_time', 'move_1', 'move_2',
                     'individual_stamina', 'individual_defense',
-                    'individual_attack', 'form'],
+                    'individual_attack', 'form', 'cp'],
         'gym': ['team_id', 'guard_pokemon_id',
                 'gym_points', 'enabled', 'latitude', 'longitude'],
         'gym_details': ['latitude', 'longitude', 'team', 'pokemon']
